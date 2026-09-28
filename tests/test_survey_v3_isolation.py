@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from training.scripts.survey_pipeline_v3 import run
+from training.scripts.pipeline.survey_pipeline_v3 import run
 
 
 def test_v3_pipeline_writes_only_its_explicit_output_directories(tmp_path: Path):

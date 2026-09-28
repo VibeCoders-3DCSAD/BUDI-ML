@@ -1,0 +1,9 @@
+{
+  "candidate": "lstm",
+  "evaluation_level": "internal_synthetic_target_only",
+  "training_scope": "full_household_corpus",
+  "train_rows": 4800096,
+  "test_rows": 955110,
+  "mae": 1739.1437916836803,
+  "served_forecaster_unchanged": true
+}

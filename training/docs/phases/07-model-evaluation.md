@@ -24,4 +24,4 @@
 Re-run `train_*.py` after any feature/label change. Output lands in `models/<family>/` with
 `evaluation.json`, `evaluation_report.md`, and its `metadata.json` (schema in
 `models/README.md`). To re-emit reports/metadata from an existing `evaluation.json` without
-retraining: `python training/scripts/regenerate_artifacts.py`.
+retraining: `python -m training.scripts.modeling.regenerate_artifacts`.

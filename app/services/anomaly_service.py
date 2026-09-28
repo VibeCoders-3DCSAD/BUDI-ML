@@ -1,131 +1,153 @@
 from __future__ import annotations
 
+import logging
+from collections import Counter, defaultdict
+from datetime import datetime
+from math import exp, log1p
+
 import numpy as np
-import torch
-import torch.nn as nn
 
-from app.models.registry import ModuleModel
 from app.schemas.anomaly import (
-    AnomalousTransaction,
-    AnomalyRequest,
+    AnomalyDecision,
+    AnomalyTransaction,
+    DecisionState,
     OverspendingTransaction,
-    WhitelistEntry,
 )
-from app.services.features import anomaly_feature_vectors
+
+RULESET_VERSION = "personal-transaction-iqr-v2.3.0"
+MINIMUM_HISTORY = 6
+IQR_MULTIPLIER = 1.5
+logger = logging.getLogger(__name__)
 
 
-def _score(module: ModuleModel, X: np.ndarray) -> np.ndarray:
-    model = module.model
-    if isinstance(model, nn.Module):
-        model.eval()
-        with torch.no_grad():
-            recon = model(torch.tensor(X, dtype=torch.float32)).numpy()
-        return np.mean((X - recon) ** 2, axis=1)
-    if hasattr(model, "score"):
-        return np.asarray(model.score(X), dtype=float)
-    if hasattr(model, "decision_function"):
-        scores = -model.decision_function(X)
-        scores = (scores - scores.min()) / (scores.max() - scores.min() + 1e-8)
-        return scores
-    raise TypeError(f"unsupported anomaly detector type: {type(model)}")
+def _timestamp(value: str) -> datetime:
+    return datetime.fromisoformat(value)
 
 
-def _explanation(txn: dict, score: float, threshold: float) -> tuple[str, list[str]]:
-    """Return (reason, feature_contributions) for a single transaction."""
-    reason_parts = []
-    contributions = []
-    amount = float(txn["amount"])
-    if score >= threshold:
-        reason_parts.append("Reconstruction error above the detection threshold")
-
-    category = str(txn.get("category", "unknown"))
-    if category not in {"food", "housing", "transport", "health", "education", "other"}:
-        reason_parts.append("Unusual merchant category")
-        contributions.append(f"category:{category}")
-    if amount > 2000.0:
-        reason_parts.append("Transaction amount exceeds typical single-spend size")
-        contributions.append(f"amount:{amount:.0f}")
-
-    reason = "; ".join(reason_parts) if reason_parts else "No anomaly signals detected"
-    return reason, contributions
+def _has_three_calendar_months(
+    history: list[AnomalyTransaction], candidate: AnomalyTransaction
+) -> bool:
+    earliest = _timestamp(history[0].date)
+    current = _timestamp(candidate.date)
+    return (current.year - earliest.year) * 12 + current.month - earliest.month >= 3
 
 
-def _whitelisted(txn: dict, whitelist: list[WhitelistEntry] | None) -> bool:
-    if not whitelist:
-        return False
-    txn_id = str(txn.get("transaction_id") or "")
-    category = str(txn.get("category", "")).lower()
-    for entry in whitelist:
-        if entry.transaction_id and txn_id and entry.transaction_id == txn_id:
-            return True
-        if entry.category and category == entry.category.lower():
-            return True
-    return False
+def _amount_bounds(lower: float, upper: float) -> tuple[float, float]:
+    return max(0.0, exp(lower) - 1), max(0.0, exp(upper) - 1)
 
 
-def _overspending_detect(
-    transactions: list[dict],
+def detect(transactions: list[AnomalyTransaction]) -> list[AnomalyDecision]:
+    """Score valid expenses against only their earlier same-category history."""
+    ordered = sorted(
+        transactions,
+        key=lambda transaction: (_timestamp(transaction.date), transaction.transaction_id),
+    )
+    histories: dict[str, list[AnomalyTransaction]] = defaultdict(list)
+    decisions: list[AnomalyDecision] = []
+    state_counts: Counter[DecisionState] = Counter()
+    skipped_non_expenses = 0
+
+    for transaction in ordered:
+        if transaction.transaction_type != "expense":
+            skipped_non_expenses += 1
+            continue
+
+        history = histories[transaction.category]
+        if len(history) < MINIMUM_HISTORY or not _has_three_calendar_months(history, transaction):
+            decision = AnomalyDecision(
+                transaction_id=transaction.transaction_id,
+                category=transaction.category,
+                usable_history_count=len(history),
+                state=DecisionState.INSUFFICIENT_HISTORY,
+                reason="More earlier expenses across three calendar months are required.",
+            )
+        else:
+            values = np.log1p([item.amount for item in history])
+            q1, q3 = np.quantile(values, [0.25, 0.75], method="linear")
+            iqr = float(q3 - q1)
+            if iqr == 0:
+                decision = AnomalyDecision(
+                    transaction_id=transaction.transaction_id,
+                    category=transaction.category,
+                    usable_history_count=len(history),
+                    state=DecisionState.INSUFFICIENT_VARIABILITY,
+                    reason="Earlier expenses do not have enough variability for IQR bounds.",
+                )
+            else:
+                lower = float(q1 - IQR_MULTIPLIER * iqr)
+                upper = float(q3 + IQR_MULTIPLIER * iqr)
+                transformed_amount = log1p(transaction.amount)
+                historical_median = float(np.median([item.amount for item in history]))
+                state = (
+                    DecisionState.ANOMALOUS
+                    if transformed_amount < lower or transformed_amount > upper
+                    else DecisionState.NORMAL
+                )
+                severity = max(lower - transformed_amount, 0.0, transformed_amount - upper) / iqr
+                lower_amount, upper_amount = _amount_bounds(lower, upper)
+                decision = AnomalyDecision(
+                    transaction_id=transaction.transaction_id,
+                    category=transaction.category,
+                    usable_history_count=len(history),
+                    state=state,
+                    lower_bound=round(lower_amount, 2),
+                    upper_bound=round(upper_amount, 2),
+                    historical_median=round(historical_median, 2) if historical_median > 0 else None,
+                    usual_spending=round(historical_median, 2) if historical_median > 0 else None,
+                    severity=round(severity, 4),
+                    reason=(
+                        "This transaction is outside your usual spending range for this category."
+                        if state is DecisionState.ANOMALOUS
+                        else "This transaction is within your usual spending range for this category."
+                    ),
+                )
+        decisions.append(decision)
+        state_counts[decision.state] += 1
+        if decision.state is DecisionState.ANOMALOUS:
+            logger.info(
+                "anomaly detected transaction_id=%s category=%s history_count=%d severity=%s",
+                decision.transaction_id,
+                decision.category,
+                decision.usable_history_count,
+                decision.severity,
+            )
+        # Flagged and insufficient observations are future history, never candidate evidence.
+        history.append(transaction)
+    logger.info(
+        "anomaly scoring complete inputs=%d scored=%d skipped_non_expenses=%d anomalous=%d normal=%d insufficient_history=%d insufficient_variability=%d",
+        len(transactions),
+        len(decisions),
+        skipped_non_expenses,
+        state_counts[DecisionState.ANOMALOUS],
+        state_counts[DecisionState.NORMAL],
+        state_counts[DecisionState.INSUFFICIENT_HISTORY],
+        state_counts[DecisionState.INSUFFICIENT_VARIABILITY],
+    )
+    return decisions
+
+
+def overspending_detect(
+    transactions: list[AnomalyTransaction],
     budget_allocations: list[dict],
 ) -> list[OverspendingTransaction]:
     """Rule-based overspending detection: category spend vs budget."""
-    budget_map = {b["category_id"]: b["budget_amount"] for b in budget_allocations}
-    category_totals: dict[str, float] = {}
-    for txn in transactions:
-        if txn.get("transaction_type") != "expense":
-            continue
-        cat = txn.get("category", "other")
-        category_totals[cat] = category_totals.get(cat, 0.0) + float(txn["amount"])
+    budget_map = {budget["category_id"]: budget["budget_amount"] for budget in budget_allocations}
+    category_totals: dict[str, float] = defaultdict(float)
+    for transaction in transactions:
+        if transaction.transaction_type == "expense":
+            category_totals[transaction.category] += transaction.amount
 
     results: list[OverspendingTransaction] = []
-    for cat, total in category_totals.items():
-        budget = budget_map.get(
-            cat, budget_map.get(f"essentials_{cat}", budget_map.get(f"discretionary_{cat}"))
-        )
-        if budget is None:
-            continue
-        if total > budget:
-            for txn in transactions:
-                if txn.get("category") == cat and txn.get("transaction_type") == "expense":
+    for category, total in category_totals.items():
+        budget = budget_map.get(category)
+        if budget is not None and total > budget:
+            for transaction in transactions:
+                if transaction.category == category and transaction.transaction_type == "expense":
                     results.append(
                         OverspendingTransaction(
-                            transaction_id=str(txn.get("transaction_id") or ""),
-                            budget_excess=round(float(txn["amount"]) * (1 - budget / total), 2),
-                            category=cat,
+                            transaction_id=transaction.transaction_id,
+                            budget_excess=round(transaction.amount * (1 - budget / total), 2),
+                            category=category,
                         )
                     )
-    return results
-
-
-def detect(module: ModuleModel, request: AnomalyRequest) -> list[AnomalousTransaction]:
-    """Score each transaction; target = the most recent transaction."""
-    transactions = [t.model_dump() for t in request.transactions]
-
-    # Apply whitelist filtering
-    txns_for_scoring = [t for t in transactions if not _whitelisted(t, request.whitelist)]
-
-    _, feature_frame = anomaly_feature_vectors(txns_for_scoring)
-    if feature_frame.empty:
-        raise ValueError("anomaly detection requires baseline transaction history")
-
-    X = feature_frame[module.feature_columns].values.astype(np.float32)
-    scores = _score(module, X)
-    if module.threshold is None:
-        raise RuntimeError(
-            "anomaly detector has no operating threshold: evaluation.json is missing "
-            "val_selected_threshold and no fallback is configured"
-        )
-    threshold = module.threshold
-
-    results = []
-    for i, txn in enumerate(txns_for_scoring):
-        score = float(scores[i]) if i < len(scores) else 0.0
-        reason, contribs = _explanation(txn, score, threshold)
-        results.append(
-            AnomalousTransaction(
-                transaction_id=str(txn.get("transaction_id") or i),
-                anomaly_score=round(score, 4),
-                reason=reason,
-                feature_contributions=contribs,
-            )
-        )
     return results

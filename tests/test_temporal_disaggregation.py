@@ -1,18 +1,11 @@
 """Unit tests for calendar-year current-price HFCE disaggregation."""
 
-import sys
-from pathlib import Path
-
 import pytest
-
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from temporal_disaggregation import (  # noqa: E402
+from training.scripts.data.temporal_disaggregation import (
     DEFAULT_HFCE_PATH,
     HFCE_CATEGORIES,
-    HFCEConfigError,
     SYNTH_VERSION,
+    HFCEConfigError,
     available_months,
     available_quarters,
     build_year_schedule,

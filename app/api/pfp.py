@@ -6,7 +6,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_registry
+from app.api.deps import (
+    TrustedHistoryContext,
+    get_registry,
+    get_trusted_history_context,
+    require_trusted_user,
+)
 from app.models.registry import ModelRegistry
 from app.schemas.common import ApiMetadata
 from app.schemas.pfp import (
@@ -59,7 +64,9 @@ class BatchResponse(BaseModel):
 async def classify(
     request: PFPClassifyRequest,
     registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> PFPClassifyResponse:
+    require_trusted_user(history, request.user_id)
     return _run(registry, request)
 
 
@@ -67,5 +74,8 @@ async def classify(
 async def classify_batch(
     batch: BatchRequest,
     registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> BatchResponse:
+    for request in batch.requests:
+        require_trusted_user(history, request.user_id)
     return BatchResponse(results=[_run(registry, req) for req in batch.requests])

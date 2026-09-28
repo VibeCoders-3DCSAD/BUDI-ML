@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.conftest import trusted_post
+
 
 def _budget_payload():
     return {
@@ -51,7 +53,7 @@ def _budget_payload():
 
 
 def test_budget_recommend(client):
-    resp = client.post("/api/v1/budget/recommend", json=_budget_payload())
+    resp = trusted_post(client, "/api/v1/budget/recommend", _budget_payload())
     assert resp.status_code == 200
     body = resp.json()
     assert body["request_id"] == "req-budget-1"
@@ -69,5 +71,5 @@ def test_budget_recommend(client):
 def test_budget_rejects_bad_restriction(client):
     payload = _budget_payload()
     payload["categories"][0]["ceiling"] = 5000.0  # ceiling below floor on PROTECTED
-    resp = client.post("/api/v1/budget/recommend", json=payload)
+    resp = trusted_post(client, "/api/v1/budget/recommend", payload)
     assert resp.status_code == 422

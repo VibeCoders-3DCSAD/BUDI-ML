@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import joblib
 import pandas as pd
-from training.scripts.compare_forecaster_v3_full import compare
-from training.scripts.train_forecaster_v3_full import run
+from training.scripts.modeling.compare_forecaster_v3_full import compare
+from training.scripts.modeling.train_forecaster_v3_full import run
 
 
 def test_full_corpus_naive_candidate_and_comparison(tmp_path: Path):
@@ -85,3 +86,5 @@ def test_full_corpus_random_forest_streams_feature_columns(tmp_path: Path):
 
     assert report["candidate"] == "random_forest"
     assert report["mae"] == 0
+    artifact = joblib.load(output / "random_forest.joblib")
+    assert artifact["kind"] == "user_relative_random_forest"

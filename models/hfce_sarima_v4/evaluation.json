@@ -1,0 +1,6030 @@
+{
+  "family": "hfce_sarima_v4",
+  "source": "training/datasets/hfce_v4/hfce_category_forecast_2000_2026.csv",
+  "source_sha256": "ed99dc7d9fe7da2efe89eb79aa69a1f03b6eaf587a1b1825f3238a6e2570a6aa",
+  "target": "current_price_million_php",
+  "frequency": "quarterly",
+  "seasonal_period": 4,
+  "model_family_policy": "sarima_for_all_categories",
+  "split": {
+    "train": 0.7,
+    "validation": 0.2,
+    "test": 0.1
+  },
+  "selection_method": {
+    "name": "expanding_window_walk_forward",
+    "horizon_quarters": 4,
+    "selection_metric": "mape_percent"
+  },
+  "intervention_contract": {
+    "covid": [
+      "2020Q1",
+      "2021Q4"
+    ],
+    "post_covid_start": "2022Q1",
+    "covid_observations": "retained"
+  },
+  "categories": {
+    "alcohol_tobacco": {
+      "artifact": "alcohol_tobacco.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_log1p",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 12224.429006700177,
+              "rmse_million_php": 19695.381138129465,
+              "mape_percent": 16.94891622187234,
+              "smape_percent": 21.338284894657182,
+              "mda_percent": 66.66666666666666
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 10450.03993950728,
+              "rmse_million_php": 16244.988276226002,
+              "mape_percent": 14.694647414980905,
+              "smape_percent": 16.66265944100086,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_010_100_log1p",
+            "metrics": {
+              "mae_million_php": 9177.46386792695,
+              "rmse_million_php": 12931.758298808949,
+              "mape_percent": 12.41357459904086,
+              "smape_percent": 12.652146732059968,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_010_100_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 8727.401954658908,
+              "rmse_million_php": 12607.382327093834,
+              "mape_percent": 11.898945028775442,
+              "smape_percent": 12.139674362292881,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 8105.546840923511,
+              "rmse_million_php": 12298.354769825837,
+              "mape_percent": 11.280982234422165,
+              "smape_percent": 11.459940651914776,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_log1p",
+          "metrics": {
+            "mae_million_php": 8105.546840923511,
+            "rmse_million_php": 12298.354769825837,
+            "mape_percent": 11.280982234422165,
+            "smape_percent": 11.459940651914776,
+            "mda_percent": 76.19047619047619
+          },
+          "params": {
+            "name": "sarima_011_101_log1p",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 4415.693996670932,
+        "rmse_million_php": 5442.964585445089,
+        "mape_percent": 4.550012240005487,
+        "smape_percent": 4.656961986722177,
+        "mda_percent": 81.81818181818183
+      }
+    },
+    "clothing_footwear": {
+      "artifact": "clothing_footwear.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_log1p",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 10739.738992934474,
+              "rmse_million_php": 15244.213577492706,
+              "mape_percent": 18.91432841496671,
+              "smape_percent": 20.448875094908136,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 8599.272396222068,
+              "rmse_million_php": 13048.66294445807,
+              "mape_percent": 15.32676615689384,
+              "smape_percent": 16.074122608361446,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 6216.65031924744,
+              "rmse_million_php": 9686.727338874009,
+              "mape_percent": 11.056437357083942,
+              "smape_percent": 10.553621582237811,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 8554.761534610208,
+              "rmse_million_php": 12123.267980996194,
+              "mape_percent": 15.098596472897949,
+              "smape_percent": 15.185822028025301,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 6278.472960144853,
+              "rmse_million_php": 9044.799043376359,
+              "mape_percent": 11.01754931592313,
+              "smape_percent": 10.432171495118435,
+              "mda_percent": 66.66666666666666
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_log1p",
+          "metrics": {
+            "mae_million_php": 6278.472960144853,
+            "rmse_million_php": 9044.799043376359,
+            "mape_percent": 11.01754931592313,
+            "smape_percent": 10.432171495118435,
+            "mda_percent": 66.66666666666666
+          },
+          "params": {
+            "name": "sarima_011_101_log1p",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 7560.984141545442,
+        "rmse_million_php": 8767.471457797898,
+        "mape_percent": 10.35229751941862,
+        "smape_percent": 10.642662620380076,
+        "mda_percent": 100.0
+      }
+    },
+    "communication": {
+      "artifact": "communication.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_identity",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "identity"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 3054.599923830841,
+              "rmse_million_php": 3644.974057691387,
+              "mape_percent": 2.852631513315154,
+              "smape_percent": 2.8137528165514976,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 2529.690836928129,
+              "rmse_million_php": 3089.478353518496,
+              "mape_percent": 2.3568526285091704,
+              "smape_percent": 2.3336575718280397,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 2169.3175262724494,
+              "rmse_million_php": 2756.0030622155114,
+              "mape_percent": 2.026719192728644,
+              "smape_percent": 2.016074953375603,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 2774.534712119384,
+              "rmse_million_php": 3346.7587707914645,
+              "mape_percent": 2.5449643356666893,
+              "smape_percent": 2.516729206614513,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_identity",
+          "metrics": {
+            "mae_million_php": 2529.690836928129,
+            "rmse_million_php": 3089.478353518496,
+            "mape_percent": 2.3568526285091704,
+            "smape_percent": 2.3336575718280397,
+            "mda_percent": 90.47619047619048
+          },
+          "params": {
+            "name": "sarima_110_100_identity",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "identity"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 1743.1373996863151,
+        "rmse_million_php": 2160.4201331590984,
+        "mape_percent": 1.2119411591980882,
+        "smape_percent": 1.2134830027042842,
+        "mda_percent": 100.0
+      }
+    },
+    "education": {
+      "artifact": "education.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_log1p",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 10714.434267725388,
+              "rmse_million_php": 14932.212654747487,
+              "mape_percent": 5.8460548241075845,
+              "smape_percent": 5.941394043559526,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 10831.006056866247,
+              "rmse_million_php": 14650.46374143605,
+              "mape_percent": 5.914588096454238,
+              "smape_percent": 5.951454814366755,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 10954.57690468322,
+              "rmse_million_php": 14543.163848593145,
+              "mape_percent": 5.992265674411306,
+              "smape_percent": 5.979841046255768,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 9153.730890214694,
+              "rmse_million_php": 12986.44324313549,
+              "mape_percent": 5.064441684730608,
+              "smape_percent": 5.065781779645354,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_log1p",
+          "metrics": {
+            "mae_million_php": 9153.730890214694,
+            "rmse_million_php": 12986.44324313549,
+            "mape_percent": 5.064441684730608,
+            "smape_percent": 5.065781779645354,
+            "mda_percent": 80.95238095238095
+          },
+          "params": {
+            "name": "sarima_110_100_log1p",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 9366.23849663319,
+        "rmse_million_php": 11536.928211133365,
+        "mape_percent": 3.393823413201385,
+        "smape_percent": 3.4614499421213147,
+        "mda_percent": 63.63636363636363
+      }
+    },
+    "food": {
+      "artifact": "food.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_identity",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "identity"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 25188.749139803353,
+              "rmse_million_php": 32446.45852651794,
+              "mape_percent": 1.8060330321240208,
+              "smape_percent": 1.7998741589892817,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 24765.11196970025,
+              "rmse_million_php": 32141.137402365977,
+              "mape_percent": 1.7865899794552738,
+              "smape_percent": 1.780548773920591,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_identity",
+          "metrics": {
+            "mae_million_php": 24765.11196970025,
+            "rmse_million_php": 32141.137402365977,
+            "mape_percent": 1.7865899794552738,
+            "smape_percent": 1.780548773920591,
+            "mda_percent": 100.0
+          },
+          "params": {
+            "name": "sarima_011_101_identity",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "identity"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 93002.01032406832,
+        "rmse_million_php": 112323.52459726276,
+        "mape_percent": 4.784074103230351,
+        "smape_percent": 4.631467223627636,
+        "mda_percent": 100.0
+      }
+    },
+    "furnishings_household": {
+      "artifact": "furnishings_household.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_log1p",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 9329.004292108435,
+              "rmse_million_php": 14048.561490205126,
+              "mape_percent": 9.461411917982979,
+              "smape_percent": 9.932653575688551,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 9369.329256526033,
+              "rmse_million_php": 14682.11419860065,
+              "mape_percent": 9.53537084513939,
+              "smape_percent": 10.15093013332537,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 9872.009400265728,
+              "rmse_million_php": 15207.985426038063,
+              "mape_percent": 10.073774355765181,
+              "smape_percent": 10.816474382191373,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 9161.524401214507,
+              "rmse_million_php": 13547.146540765558,
+              "mape_percent": 9.347164764801626,
+              "smape_percent": 9.685251704298807,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_log1p",
+          "metrics": {
+            "mae_million_php": 9161.524401214507,
+            "rmse_million_php": 13547.146540765558,
+            "mape_percent": 9.347164764801626,
+            "smape_percent": 9.685251704298807,
+            "mda_percent": 85.71428571428571
+          },
+          "params": {
+            "name": "sarima_011_101_log1p",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 2238.763643616541,
+        "rmse_million_php": 3012.080201278383,
+        "mape_percent": 1.6495424178984082,
+        "smape_percent": 1.6699385976710275,
+        "mda_percent": 100.0
+      }
+    },
+    "health": {
+      "artifact": "health.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_log1p",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 10513.530352839292,
+              "rmse_million_php": 13313.96181422733,
+              "mape_percent": 6.804326732056277,
+              "smape_percent": 6.844698400904754,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 8163.205080112815,
+              "rmse_million_php": 10752.306915857107,
+              "mape_percent": 5.123043663753432,
+              "smape_percent": 5.124175760149184,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 11266.2482329866,
+              "rmse_million_php": 13922.116708223284,
+              "mape_percent": 7.238269331902796,
+              "smape_percent": 7.303820212204829,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 7016.184148595158,
+              "rmse_million_php": 9738.237631782458,
+              "mape_percent": 4.48600776018833,
+              "smape_percent": 4.451987823207304,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_log1p",
+          "metrics": {
+            "mae_million_php": 7016.184148595158,
+            "rmse_million_php": 9738.237631782458,
+            "mape_percent": 4.48600776018833,
+            "smape_percent": 4.451987823207304,
+            "mda_percent": 100.0
+          },
+          "params": {
+            "name": "sarima_011_101_log1p",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 12134.468731941934,
+        "rmse_million_php": 13971.529100365608,
+        "mape_percent": 4.933520884933603,
+        "smape_percent": 5.09078621597551,
+        "mda_percent": 100.0
+      }
+    },
+    "housing_water_utilities": {
+      "artifact": "housing_water_utilities.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_identity",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "identity"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 10924.418927430383,
+              "rmse_million_php": 14141.723374950474,
+              "mape_percent": 2.316644084950146,
+              "smape_percent": 2.2972760189387307,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 11047.016635131753,
+              "rmse_million_php": 14138.373243409575,
+              "mape_percent": 2.352267267402936,
+              "smape_percent": 2.333243474848754,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 11421.32972358771,
+              "rmse_million_php": 14640.339599291527,
+              "mape_percent": 2.4187185879975917,
+              "smape_percent": 2.390728218465643,
+              "mda_percent": 100.0
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_identity",
+          "metrics": {
+            "mae_million_php": 10924.418927430383,
+            "rmse_million_php": 14141.723374950474,
+            "mape_percent": 2.316644084950146,
+            "smape_percent": 2.2972760189387307,
+            "mda_percent": 100.0
+          },
+          "params": {
+            "name": "sarima_110_100_identity",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "identity"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 39286.49853117878,
+        "rmse_million_php": 48290.69537179863,
+        "mape_percent": 5.9423459745703315,
+        "smape_percent": 5.70138554747337,
+        "mda_percent": 90.9090909090909
+      }
+    },
+    "miscellaneous_goods_services": {
+      "artifact": "miscellaneous_goods_services.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_identity",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "identity"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 13278.793664305176,
+              "rmse_million_php": 15993.04108547915,
+              "mape_percent": 2.5720145671678436,
+              "smape_percent": 2.5897843978962563,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 13084.54732935792,
+              "rmse_million_php": 16046.926925042426,
+              "mape_percent": 2.488664367404376,
+              "smape_percent": 2.5018073212177274,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 15890.519343993596,
+              "rmse_million_php": 19622.451164558574,
+              "mape_percent": 3.020425348510096,
+              "smape_percent": 3.0255650558445177,
+              "mda_percent": 90.47619047619048
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 17549.084162613406,
+              "rmse_million_php": 20061.566890830338,
+              "mape_percent": 3.4266704998058546,
+              "smape_percent": 3.4398409613745593,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_identity",
+          "metrics": {
+            "mae_million_php": 13084.54732935792,
+            "rmse_million_php": 16046.926925042426,
+            "mape_percent": 2.488664367404376,
+            "smape_percent": 2.5018073212177274,
+            "mda_percent": 85.71428571428571
+          },
+          "params": {
+            "name": "sarima_110_100_identity",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "identity"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 18422.302826618987,
+        "rmse_million_php": 22655.83363579784,
+        "mape_percent": 2.344799199387809,
+        "smape_percent": 2.3532359842717776,
+        "mda_percent": 100.0
+      }
+    },
+    "recreation_culture": {
+      "artifact": "recreation_culture.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_log1p",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 12271.85674370009,
+              "rmse_million_php": 21178.68273054253,
+              "mape_percent": 33.34734606807552,
+              "smape_percent": 30.832279576852834,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 31731.35205712394,
+              "rmse_million_php": 62191.81032963939,
+              "mape_percent": 85.26781405449412,
+              "smape_percent": 52.08421115278772,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 19444.973187859643,
+              "rmse_million_php": 28385.67398425694,
+              "mape_percent": 50.47312502879752,
+              "smape_percent": 52.3467828689754,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 11670.22556579591,
+              "rmse_million_php": 18802.50190940786,
+              "mape_percent": 29.91494921748045,
+              "smape_percent": 31.476569055577663,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 13130.708626766209,
+              "rmse_million_php": 18640.725051266432,
+              "mape_percent": 32.066085217895626,
+              "smape_percent": 32.69451190582022,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_log1p",
+          "metrics": {
+            "mae_million_php": 11670.22556579591,
+            "rmse_million_php": 18802.50190940786,
+            "mape_percent": 29.91494921748045,
+            "smape_percent": 31.476569055577663,
+            "mda_percent": 80.95238095238095
+          },
+          "params": {
+            "name": "sarima_110_100_log1p",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 4752.585155453892,
+        "rmse_million_php": 6036.741832186302,
+        "mape_percent": 6.016713657985839,
+        "smape_percent": 5.769211374246758,
+        "mda_percent": 100.0
+      }
+    },
+    "restaurants_hotels": {
+      "artifact": "restaurants_hotels.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_011_101_log1p",
+        "family": "sarima",
+        "order": [
+          0,
+          1,
+          1
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          1,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 53588.50068693646,
+              "rmse_million_php": 93157.88758502674,
+              "mape_percent": 30.508601437667494,
+              "smape_percent": 25.718980206678516,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 206544.91826822594,
+              "rmse_million_php": 486966.246123052,
+              "mape_percent": 120.72860154486503,
+              "smape_percent": 49.90491745943049,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 69391.95038492283,
+              "rmse_million_php": 119273.57420764214,
+              "mape_percent": 40.22874053024843,
+              "smape_percent": 36.54171069075421,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 58745.6929895576,
+              "rmse_million_php": 87523.84491421292,
+              "mape_percent": 31.796995763502444,
+              "smape_percent": 36.186460639749455,
+              "mda_percent": 71.42857142857143
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_011_101_log1p",
+          "metrics": {
+            "mae_million_php": 58745.6929895576,
+            "rmse_million_php": 87523.84491421292,
+            "mape_percent": 31.796995763502444,
+            "smape_percent": 36.186460639749455,
+            "mda_percent": 71.42857142857143
+          },
+          "params": {
+            "name": "sarima_011_101_log1p",
+            "family": "sarima",
+            "order": [
+              0,
+              1,
+              1
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              1,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 63892.54395077151,
+        "rmse_million_php": 87710.18119796104,
+        "mape_percent": 12.827119423308067,
+        "smape_percent": 11.660895041981863,
+        "mda_percent": 100.0
+      }
+    },
+    "transport": {
+      "artifact": "transport.joblib",
+      "split_periods": {
+        "train": [
+          "2000Q1",
+          "2018Q2"
+        ],
+        "validation": [
+          "2018Q3",
+          "2023Q3"
+        ],
+        "test": [
+          "2023Q4",
+          "2026Q2"
+        ]
+      },
+      "selected_candidate": {
+        "name": "sarima_110_100_log1p",
+        "family": "sarima",
+        "order": [
+          1,
+          1,
+          0
+        ],
+        "seasonal_order": [
+          1,
+          0,
+          0,
+          4
+        ],
+        "transform": "log1p"
+      },
+      "validation": {
+        "candidates": [
+          {
+            "name": "sarima_010_100_identity",
+            "metrics": {
+              "mae_million_php": 67800.11101256777,
+              "rmse_million_php": 109786.79517859654,
+              "mape_percent": 28.446831446104685,
+              "smape_percent": 30.108132847109985,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_010_100_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_identity",
+            "metrics": {
+              "mae_million_php": 360833.9146859483,
+              "rmse_million_php": 883881.4362092852,
+              "mape_percent": 151.16975173506185,
+              "smape_percent": 50.35518496680348,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_identity",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_identity",
+            "metrics": {
+              "mae_million_php": 112212.56022989823,
+              "rmse_million_php": 183325.87384821707,
+              "mape_percent": 45.38842399633093,
+              "smape_percent": 50.7064626138529,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_011_101_identity",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "identity"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_010_100_log1p",
+            "metrics": {
+              "mae_million_php": 52369.82329052547,
+              "rmse_million_php": 85101.28170378496,
+              "mape_percent": 22.295941914733046,
+              "smape_percent": 22.55122878971813,
+              "mda_percent": 85.71428571428571
+            },
+            "params": {
+              "name": "sarima_010_100_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_110_100_log1p",
+            "metrics": {
+              "mae_million_php": 70875.75327774473,
+              "rmse_million_php": 106213.62202763247,
+              "mape_percent": 28.446232411105086,
+              "smape_percent": 33.29652165302433,
+              "mda_percent": 80.95238095238095
+            },
+            "params": {
+              "name": "sarima_110_100_log1p",
+              "family": "sarima",
+              "order": [
+                1,
+                1,
+                0
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                0,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "sarima_011_101_log1p",
+            "metrics": {
+              "mae_million_php": 72617.20773750058,
+              "rmse_million_php": 102610.89937446722,
+              "mape_percent": 28.64100571287113,
+              "smape_percent": 31.92564676077947,
+              "mda_percent": 76.19047619047619
+            },
+            "params": {
+              "name": "sarima_011_101_log1p",
+              "family": "sarima",
+              "order": [
+                0,
+                1,
+                1
+              ],
+              "seasonal_order": [
+                1,
+                0,
+                1,
+                4
+              ],
+              "transform": "log1p"
+            },
+            "walk_forward_folds": [
+              {
+                "train": [
+                  "2000Q1",
+                  "2018Q2"
+                ],
+                "validation": [
+                  "2018Q3",
+                  "2019Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2019Q2"
+                ],
+                "validation": [
+                  "2019Q3",
+                  "2020Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2020Q2"
+                ],
+                "validation": [
+                  "2020Q3",
+                  "2021Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2021Q2"
+                ],
+                "validation": [
+                  "2021Q3",
+                  "2022Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2022Q2"
+                ],
+                "validation": [
+                  "2022Q3",
+                  "2023Q2"
+                ]
+              },
+              {
+                "train": [
+                  "2000Q1",
+                  "2023Q2"
+                ],
+                "validation": [
+                  "2023Q3",
+                  "2023Q3"
+                ]
+              }
+            ]
+          }
+        ],
+        "winner": {
+          "name": "sarima_110_100_log1p",
+          "metrics": {
+            "mae_million_php": 70875.75327774473,
+            "rmse_million_php": 106213.62202763247,
+            "mape_percent": 28.446232411105086,
+            "smape_percent": 33.29652165302433,
+            "mda_percent": 80.95238095238095
+          },
+          "params": {
+            "name": "sarima_110_100_log1p",
+            "family": "sarima",
+            "order": [
+              1,
+              1,
+              0
+            ],
+            "seasonal_order": [
+              1,
+              0,
+              0,
+              4
+            ],
+            "transform": "log1p"
+          },
+          "walk_forward_folds": [
+            {
+              "train": [
+                "2000Q1",
+                "2018Q2"
+              ],
+              "validation": [
+                "2018Q3",
+                "2019Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2019Q2"
+              ],
+              "validation": [
+                "2019Q3",
+                "2020Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2020Q2"
+              ],
+              "validation": [
+                "2020Q3",
+                "2021Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2021Q2"
+              ],
+              "validation": [
+                "2021Q3",
+                "2022Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2022Q2"
+              ],
+              "validation": [
+                "2022Q3",
+                "2023Q2"
+              ]
+            },
+            {
+              "train": [
+                "2000Q1",
+                "2023Q2"
+              ],
+              "validation": [
+                "2023Q3",
+                "2023Q3"
+              ]
+            }
+          ]
+        }
+      },
+      "test_metrics": {
+        "mae_million_php": 22533.90063776048,
+        "rmse_million_php": 28818.647105137035,
+        "mape_percent": 4.6768675451185935,
+        "smape_percent": 4.50631150606468,
+        "mda_percent": 100.0
+      }
+    }
+  },
+  "metric_averages": {
+    "method": "unweighted_macro_average_across_12_category_models",
+    "validation": {
+      "mae_million_php": 19359.24167813397,
+      "rmse_million_php": 27964.518011334698,
+      "mape_percent": 11.6919228510394,
+      "smape_percent": 12.580664540703433,
+      "mda_percent": 84.92063492063492
+    },
+    "test": {
+      "mae_million_php": 23279.093986328862,
+      "rmse_million_php": 29227.251452443586,
+      "mape_percent": 5.223588128188048,
+      "smape_percent": 5.113149086936706,
+      "mda_percent": 94.69696969696969
+    }
+  }
+}

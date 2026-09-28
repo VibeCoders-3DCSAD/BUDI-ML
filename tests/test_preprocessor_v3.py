@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from training.scripts.preprocessor_v3 import split_households
+from training.scripts.pipeline.preprocessor_v3 import split_households
 
 
 def test_household_splits_are_deterministic_and_disjoint():

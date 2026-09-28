@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from training.scripts.train_forecaster_v3 import HAS_TORCH, train_and_evaluate
+from training.scripts.modeling.train_forecaster_v3 import HAS_TORCH, train_and_evaluate
 
 
 def test_v3_evaluation_records_unreleased_synthetic_target_gate(tmp_path: Path):

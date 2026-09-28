@@ -23,5 +23,5 @@ the "model" is the constraint formulation + configuration.
 The evaluation is deterministic and fast; rebuild artifacts with:
 
 ```bash
-python training/scripts/regenerate_artifacts.py
+python -m training.scripts.modeling.regenerate_artifacts
 ```

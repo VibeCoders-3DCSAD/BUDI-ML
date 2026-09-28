@@ -1,9 +1,11 @@
 {
   "candidate": "naive",
   "evaluation_level": "internal_synthetic_target_only",
+  "evaluation_contract": "three_prior_month_user_relative_ratio_v1",
+  "eligible_history_months": 3,
   "training_scope": "full_household_corpus",
-  "train_rows": 4800096,
-  "test_rows": 1004090,
-  "mae": 2520.5590428152736,
+  "train_rows": 4457232,
+  "test_rows": 955110,
+  "mae": 2166.5866982027364,
   "served_forecaster_unchanged": true
 }

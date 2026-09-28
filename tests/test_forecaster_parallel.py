@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-import sys
 import time
-from pathlib import Path
 
 import pandas as pd
-
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from feature_engineering_forecaster import process_personas  # noqa: E402
+from training.scripts.pipeline.feature_engineering_forecaster import process_personas
 
 
 def test_parallel_persona_processing_matches_serial_output():

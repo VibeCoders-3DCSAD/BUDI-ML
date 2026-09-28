@@ -14,9 +14,8 @@ from app.models.loader import ModelLoader
 PFP_MODULE = "pfp"
 FORECASTER_MODULE = "forecaster"
 FORECASTER_ARTIFACT_MODULE = "forecaster_v2"
-ANOMALY_MODULE = "anomaly"
+HFCE_SARIMA_MODULE = "hfce_sarima_v4"
 BUDGET_MODULE = "budget"
-ANOMALY_ARTIFACT = "anomaly_detector.joblib"
 
 
 def _resolve_pfp_artifact(evaluation: dict) -> str:
@@ -107,7 +106,7 @@ class ModelRegistry:
         self.loader = loader or ModelLoader()
         self.pfp: ModuleModel | None = None
         self.forecaster: ModuleModel | None = None
-        self.anomaly: ModuleModel | None = None
+        self.hfce_sarima: ModuleModel | None = None
         self.budget: ModuleModel | None = None
 
     def load_all(self) -> None:
@@ -118,10 +117,10 @@ class ModelRegistry:
             logger.warning("forecaster artifacts not found; skipping: %s", exc)
             self.forecaster = None
         try:
-            self.anomaly = self._load_anomaly()
+            self.hfce_sarima = self._load_hfce_sarima()
         except FileNotFoundError as exc:
-            logger.warning("anomaly artifacts not found; skipping: %s", exc)
-            self.anomaly = None
+            logger.warning("HFCE SARIMA artifacts not found; skipping: %s", exc)
+            self.hfce_sarima = None
         try:
             self.budget = self._load_budget()
         except FileNotFoundError as exc:
@@ -175,27 +174,6 @@ class ModelRegistry:
             metadata=self._metadata(FORECASTER_ARTIFACT_MODULE),
         )
 
-    def _load_anomaly(self) -> ModuleModel:
-        evaluation = self.loader.load_json(ANOMALY_MODULE, "evaluation.json")
-        feature_columns = evaluation.get("feature_columns", [])
-        artifact = evaluation.get("winner_artifact")
-        if not artifact or not isinstance(artifact, str) or not artifact.endswith(".joblib"):
-            artifact = ANOMALY_ARTIFACT
-        model = self.loader.load_joblib(ANOMALY_MODULE, artifact)
-        threshold = (
-            evaluation.get("val_selected_threshold")
-            or evaluation.get("final_test_metrics", {}).get("best_threshold")
-            or evaluation.get("threshold")
-        )
-        return ModuleModel(
-            module=ANOMALY_MODULE,
-            model=model,
-            evaluation=evaluation,
-            feature_columns=feature_columns,
-            threshold=threshold,
-            metadata=self._metadata(ANOMALY_MODULE),
-        )
-
     def _load_budget(self) -> ModuleModel:
         evaluation = self.loader.load_json(BUDGET_MODULE, "evaluation.json")
         config = self.loader.load_json(BUDGET_MODULE, "budget_config.json")
@@ -207,6 +185,20 @@ class ModelRegistry:
             metadata=self._metadata(BUDGET_MODULE),
         )
 
+    def _load_hfce_sarima(self) -> ModuleModel:
+        evaluation = self.loader.load_json(HFCE_SARIMA_MODULE, "evaluation.json")
+        artifacts = {
+            category: self.loader.load_joblib(HFCE_SARIMA_MODULE, details["artifact"])
+            for category, details in evaluation["categories"].items()
+        }
+        return ModuleModel(
+            module=HFCE_SARIMA_MODULE,
+            model=artifacts,
+            evaluation=evaluation,
+            feature_columns=[],
+            metadata=self._metadata(HFCE_SARIMA_MODULE),
+        )
+
     @property
     def loaded_modules(self) -> list[str]:
         return [
@@ -214,7 +206,7 @@ class ModelRegistry:
             for name, module in (
                 (PFP_MODULE, self.pfp),
                 (FORECASTER_MODULE, self.forecaster),
-                (ANOMALY_MODULE, self.anomaly),
+                (HFCE_SARIMA_MODULE, self.hfce_sarima),
                 (BUDGET_MODULE, self.budget),
             )
             if module is not None
@@ -222,5 +214,4 @@ class ModelRegistry:
 
     @property
     def is_ready(self) -> bool:
-        core = (self.forecaster, self.anomaly)
-        return all(m is not None for m in core)
+        return self.forecaster is not None

@@ -1,0 +1,71 @@
+{
+  "version": "4.0.0",
+  "source": "2023 FIES Volume 2 Household Summary",
+  "target": "PSA HFCE by purpose at current or constant 2018 prices",
+  "categories": {
+    "food": {
+      "hfce_purpose": "Food and non-alcoholic beverages",
+      "fies_columns": ["FOOD"],
+      "alignment": "direct"
+    },
+    "alcohol_tobacco": {
+      "hfce_purpose": "Alcoholic beverages, tobacco",
+      "fies_columns": ["ALCOHOL", "TOBACCO"],
+      "alignment": "derived"
+    },
+    "clothing_footwear": {
+      "hfce_purpose": "Clothing and footwear",
+      "fies_columns": ["CLOTH"],
+      "alignment": "proxy"
+    },
+    "housing_water_utilities": {
+      "hfce_purpose": "Housing, water, electricity, gas and other fuels",
+      "fies_columns": ["HOUSING_WATER"],
+      "alignment": "proxy"
+    },
+    "furnishings_household": {
+      "hfce_purpose": "Furnishings, household equipment and routine household maintenance",
+      "fies_columns": ["FURNISHING"],
+      "alignment": "direct"
+    },
+    "health": {
+      "hfce_purpose": "Health",
+      "fies_columns": ["HEALTH"],
+      "alignment": "direct"
+    },
+    "transport": {
+      "hfce_purpose": "Transport",
+      "fies_columns": ["TRANSPORT"],
+      "alignment": "direct"
+    },
+    "communication": {
+      "hfce_purpose": "Communication",
+      "fies_columns": ["COMMUNICATION"],
+      "alignment": "direct"
+    },
+    "recreation_culture": {
+      "hfce_purpose": "Recreation and culture",
+      "fies_columns": ["RECREATION"],
+      "alignment": "proxy"
+    },
+    "education": {
+      "hfce_purpose": "Education",
+      "fies_columns": ["EDUCATION"],
+      "alignment": "direct"
+    },
+    "restaurants_hotels": {
+      "hfce_purpose": "Restaurants and hotels",
+      "fies_columns": ["FOOD_ACCOM_SRVC"],
+      "alignment": "proxy"
+    },
+    "miscellaneous_goods_services": {
+      "hfce_purpose": "Miscellaneous goods and services",
+      "fies_columns": ["MISCELLANEOUS", "INSURANCE"],
+      "alignment": "derived_proxy"
+    }
+  },
+  "reconciliation": {
+    "total_column": "TOTEX",
+    "rule": "The mapped category sum must not exceed TOTEX. Retain the non-negative difference as an unmapped residual; do not silently assign it to an HFCE category."
+  }
+}

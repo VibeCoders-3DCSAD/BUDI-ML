@@ -32,5 +32,5 @@ held-out test split; otherwise fall back to IQR.
 Regenerate reports/metadata from existing `evaluation.json` without retraining:
 
 ```bash
-python training/scripts/regenerate_artifacts.py
+python -m training.scripts.modeling.regenerate_artifacts
 ```

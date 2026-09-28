@@ -2,7 +2,7 @@
 
 - **Project:** Development of BUDI: A Personalized Intelligent Finance Management Application for Filipinos Using Classification, Forecasting, Optimization, and Anomaly Detection Models for Improving Savings and Debt
 - **Institution:** University of Makati | Group 4, III-DCSAD
-- **Last indexed:** 2026-09-20
+- **Last indexed:** 2026-09-27
 
 ---
 
@@ -72,7 +72,7 @@ Canonical home for **new-scope** final model artifacts, each with `metadata.json
 | `models/pfp/` | PFP classifier final artifact + metadata. |
 | `models/forecaster/` | Spending forecaster v1 artifact + metadata (12-month Gaussian-noise corpus). |
 | `models/forecaster_v2/` | Spending forecaster v2 artifact + metadata (HFCE-calibrated 36-month corpus). |
-| `models/anomaly/` | Anomaly detector final artifact + metadata. |
+| `models/anomaly/` | Historical V1 anomaly artifacts; V2 serving uses no anomaly artifact. |
 | `models/budget/` | Budget optimizer config + metadata. |
 
 ## training/
@@ -81,13 +81,15 @@ The model development pipeline. Large generated artifacts are gitignored; script
 
 | Path | Purpose |
 | :--- | :--- |
-| `training/scripts/` | Collector, preprocessor, feature engineering, and training scripts. |
+| `training/scripts/{data,pipeline,modeling,analysis,shared}/` | Data preparation, pipeline, modeling, analysis, and shared-script modules. |
 | `training/docs/` | ML design documents (data collection, EDA, dimension discovery). |
 | `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, budget LP. |
 | `training/docs/pen-and-paper-simulation.md` | End-to-end pipeline simulation from a FIES row through one persona. |
 | `training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md` | FIES-anchored, HFCE-calibrated temporal disaggregation methodology. |
 | `training/docs/data-collection/synthetic-generation-v2.md` | Synthetic Generation v2 operator runbook (parallel pipeline; v1 untouched). |
 | `training/docs/data-collection/survey-only-forecast-v3.md` | Survey-only v3 selection, pseudonymization, allocation, and release contract. |
+| `training/docs/data-collection/survey-only-forecast-v3-pipeline.md` | End-to-end v3 cleaning, allocation, features, scaling, and candidate training workflow. |
+| `training/docs/data-collection/fies-hfce-v4-cleaning-preprocessing.md` | FIES-HFCE v4 annual cleaning, quarterly HFCE forecasting data, and household-quarter allocation contract. |
 | `docs/superpowers/plans/2026-09-17-synthetic-generation-v2.md` | Implementation plan for Synthetic Generation v2. |
 | `training/docs/phases/` | Model development runbooks: Phase 7 evaluation, 8 selection/versioning, 9 deployment, 10 monitoring. |
 | `training/figures/` | EDA plots and `eda_report.md`. |
@@ -104,7 +106,7 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | `docs/models/forecaster.md` | Plain-language serving explanation; v1 evaluation figures. |
 | `docs/models/forecaster-v2.md` | HFCE-calibrated v2 training note: empirical backing, SARIMA vs ARIMA, 2026-09-17 metrics. |
 | `docs/models/forecaster-v3.md` | Unserved survey-only v3 forecast pipeline and external-validation release gate. |
-| `docs/models/anomaly-alerts-v2.md` | V2 personalized dual-channel anomaly-alert methodology: transaction and forecast-residual IQR baselines from user history. |
+| `docs/models/anomaly-alerts-v2.md` | Served V2 personal transaction-IQR anomaly rule and evaluation-only corpus contract. |
 | `docs/models/classification-v2.md` | Deterministic financial classification rules, service contract, input sources, and literature provenance. |
 | `docs/models/model-candidate-roster.md` | RRL-grounded candidate algorithms per model family. |
 | `docs/standards/REPOSITORY-STANDARDS.md` | Enforceable Python/ML engineering standards. |

@@ -2,13 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-
-from app.core.config import ensure_training_scripts_on_path
-
-ensure_training_scripts_on_path()
-
-import feature_engineering as fe  # noqa: E402
-import feature_engineering_forecaster as fef  # noqa: E402
+from training.scripts.pipeline import feature_engineering as fe
+from training.scripts.pipeline import feature_engineering_forecaster as fef
 
 EXPENSE_BUCKETS = {
     "food": "food_expense",
@@ -51,9 +46,7 @@ def _remap_dates_to_grid(df: pd.DataFrame) -> pd.DataFrame:
     earliest = dates.min()
     # Month offset so the earliest transaction lands on month 1 of 2023.
     month_delta = (earliest.year - 2023) * 12 + (earliest.month - 1)
-    shifted = dates.apply(
-        lambda d: d.replace(year=2023, month=max(1, d.month - month_delta))
-    )
+    shifted = dates.apply(lambda d: d.replace(year=2023, month=max(1, d.month - month_delta)))
     df = df.copy()
     df["date"] = shifted
     return df
@@ -69,12 +62,14 @@ def build_monthly_summaries(transactions: list[dict]) -> pd.DataFrame:
     income = df.loc[income_mask].groupby("month")["amount"].sum()
     expense = df.loc[expense_mask].groupby("month")["amount"].sum()
 
-    summaries = pd.DataFrame({
-        "month": range(1, 13),
-        "persona_id": "serving_user",
-        "total_income": income.reindex(range(1, 13)).fillna(0.0).to_numpy(),
-        "total_expenses": expense.reindex(range(1, 13)).fillna(0.0).to_numpy(),
-    })
+    summaries = pd.DataFrame(
+        {
+            "month": range(1, 13),
+            "persona_id": "serving_user",
+            "total_income": income.reindex(range(1, 13)).fillna(0.0).to_numpy(),
+            "total_expenses": expense.reindex(range(1, 13)).fillna(0.0).to_numpy(),
+        }
+    )
 
     cat_pivot = df.loc[expense_mask].copy()
     cat_pivot["bucket"] = cat_pivot["category"].map(_bucket)

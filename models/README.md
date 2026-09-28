@@ -8,7 +8,8 @@ Canonical home for **new-scope final model artifacts** for the revised BUDI ML s
 models/
   README.md            # This file
   pfp/                 # PFP classifier — winner .joblib + evaluation.json + metadata.json
-  forecaster/          # Spending forecaster — winner artifact + evaluation.json + metadata.json
+   forecaster/          # Spending forecaster — winner artifact + evaluation.json + metadata.json
+   hfce_sarima_v4/      # Quarterly HFCE category trend models for personal projections
   anomaly/             # Anomaly detector — winner artifact + evaluation.json + metadata.json
   budget/              # Budget optimizer (deterministic LP) — budget_config.json + evaluation.json + metadata.json
 ```
@@ -25,7 +26,7 @@ Every family directory is self-contained and uniform:
 Reports and metadata can be re-emitted from an existing `evaluation.json` without retraining:
 
 ```bash
-python training/scripts/regenerate_artifacts.py
+python -m training.scripts.modeling.regenerate_artifacts
 ```
 
 ## Model artifact standards
@@ -64,7 +65,7 @@ Every final model committed to `models/` **must** carry `metadata.json` per this
 `winner`, `winner_artifact`, `winner_reason`, `winner_params`, `threshold` form the **winner
 contract**. **`evaluation.json` is the runtime source of truth**: the serving layer
 (`app/models/registry.py`) resolves a family's artifact from it, and
-`training/scripts/regenerate_artifacts.py` re-emits `metadata.json` from it (`model_id` =
+`training/scripts/modeling/regenerate_artifacts.py` re-emits `metadata.json` from it (`model_id` =
 `<family>-<winner>`). Fresh training runs write both; they must never diverge. At request time
 the API reports the resolved winner (e.g. `model_version`: `forecaster-tier3_sarima`,
 `tier_used`/`model_name` for pfp) rather than hardcoded strings.

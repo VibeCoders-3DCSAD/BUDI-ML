@@ -33,7 +33,7 @@ Models are picked under a **pre-registered decision rule** per family, grounded 
 | :--- | :--- | :--- |
 | **PFP** (8-class profile) | Full light tier set on this CPU box: majority, rule-based (Tier 1), logistic, Gaussian NB, RF, calibrated SVM, xgboost | Winner must beat Tier 1 by **> 2 pts Macro-F1**, else fall back to Tier 1. Winner artifact resolved by name at serve time. |
 | **Forecaster** | Pooled user-normalized **ARIMA** (`tier3_arima`, 9.40% MAPE vs 37.45% naive, −74.9%), plus **SARIMA** variant (`tier3_sarima`, degrades to plain ARIMA when pool < 24 months) | Learned model must cut MAPE **≥ 20%** vs naive, else naive. Heavy neural/RF tiers are CPU-heavy — see §8. |
-| **Anomaly** | IQR baseline (Tier 1); **adaptive threshold**, Isolation Forest, One-Class SVM, Autoencoder (Tier 2); **HybridEnsemble** (Tier 3) | Winner must reach **PR-AUC ≥ 1.5× IQR** and **PR-AUC ≥ 0.15** on the held-out test split, else fall back to IQR (Option A, revised 2026.09.10 — see `docs/thesis/anomaly-decision-rule-rationale.md`). Serving compares **raw** scores vs raw threshold. |
+| **Anomaly** | V2 personal transaction-level IQR rule | No trained global artifact is served. Each decision uses only earlier expenses for the authenticated user and canonical category; see `anomaly-alerts-v2.md`. V1 artifact experiments remain historical. |
 
 Hybrid ensemble and adaptive threshold are **back on the table** (they were briefly
 dropped; the roster/report still list them under Tier 3 / Tier 2). Do not remove them
@@ -55,6 +55,11 @@ pip install -r requirements-dev.txt
 
 - Use `.venv/bin/python` for everything. Torch import is slow (~60–70 s) — expect it in script startup.
 - On CPU-limited hosts, scripts support toggles: `--skip-torch` (forecaster), `--skip-ae` (anomaly). See §7.
+- All ML inference endpoints require `ODIN_TRUSTED_HISTORY_SHARED_SECRET`. The Odin API gateway
+  owns this secret and signs the exact body with the authenticated user's identity; direct calls
+  without valid provenance return `401`, and an unconfigured service returns `503`. Every payload
+  user ID must match the signed identity, so batch requests are single-user only. Health, readiness,
+  and metrics endpoints remain unsigned for infrastructure probes.
 
 ---
 
@@ -114,7 +119,7 @@ for commands and validation.
 - `load_all()` reads each family's `evaluation.json` and resolves the **winner artifact from the winner contract** (`_resolve_pfp_artifact`, `_resolve_forecaster_artifact`, `_load_anomaly`) — no hardcoded winner names. `metadata.json` (when present) supplies the serve-time `model_id`.
 - API responses report the resolved winner at request time — `model_version` (`<family>-<winner>`, e.g. `forecaster-tier3_sarima`, `pfp-tier3_svm`, `anomaly-tier1_iqr`) and pfp's `tier_used`/`model_name` — no hardcoded version strings in `app/api/`.
 - pfp is **optional**: missing artifacts → `pfp=None`, PFP `STANDARD` endpoint returns 503 ("pending training"). Questionnaire mode still works.
-- `is_ready` ⇔ forecaster + anomaly loaded. `/ready` lists `loaded_modules`.
+- `is_ready` ⇔ forecaster loaded. `/metrics` reports the V2 anomaly ruleset directly; it does not require an anomaly artifact.
 
 ---
 
@@ -148,22 +153,16 @@ the server will load.
 Heavy tiers (GRU/RF) are evaluated separately — see §8. The default scope keeps
 ARIMA/SARIMA as serving candidates because they are far lighter and beat the naive rule.
 
-### 6c. Anomaly — IQR + adaptive + IF + OCSVM + AE + Hybrid (~80 min with AE; ~15 min without)
+### 6c. Anomaly V2 evaluation (no training artifact)
 
 ```bash
-.venv/bin/python training/scripts/train_anomaly.py \
-  --input training/datasets/anomaly/ \
-  --output models/anomaly/ \
-  --folds training/datasets/processed/temporal_folds.json
-# CPU host w/o PyTorch (drops AE + hybrid AE member):
-.venv/bin/python training/scripts/train_anomaly.py \
-  --input training/datasets/anomaly/ \
-  --output models/anomaly/ --skip-ae
+.venv/bin/python training/scripts/evaluate_personal_iqr.py \
+  --input synth_v2/transactions.parquet \
+  --output training/datasets/anomaly_test
 ```
 
-Note: SARIMA and Adaptive-Threshold produce near-identical numbers to their parents on
-the current 12-month data — that is expected (SARIMA cannot fit a seasonal component
-below 24 pooled months; adaptive threshold trades the ~0-param baseline interpretation).
+This creates a chronological, held-out synthetic `anomaly_test` copy with controlled 3x-5x
+amount spikes. It is evaluation-only and does not establish real-world performance.
 
 ---
 

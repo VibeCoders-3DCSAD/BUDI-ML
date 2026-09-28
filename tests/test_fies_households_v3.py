@@ -4,7 +4,7 @@ import logging
 
 import pandas as pd
 import pytest
-from training.scripts.fies_households_v3 import SurveySelectionError, select_households
+from training.scripts.data.fies_households_v3 import SurveySelectionError, select_households
 
 
 def _source() -> pd.DataFrame:

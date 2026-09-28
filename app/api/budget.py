@@ -6,7 +6,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_registry
+from app.api.deps import (
+    TrustedHistoryContext,
+    get_registry,
+    get_trusted_history_context,
+    require_trusted_user,
+)
 from app.models.registry import ModelRegistry
 from app.schemas.budget import BudgetRequest, BudgetResponse
 from app.schemas.common import ApiMetadata, ModuleStatus
@@ -50,7 +55,9 @@ class BatchResponse(BaseModel):
 async def recommend(
     request: BudgetRequest,
     registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> BudgetResponse:
+    require_trusted_user(history, request.user_id)
     return _run(request, registry)
 
 
@@ -58,5 +65,8 @@ async def recommend(
 async def recommend_batch(
     batch: BatchRequest,
     registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> BatchResponse:
+    for request in batch.requests:
+        require_trusted_user(history, request.user_id)
     return BatchResponse(results=[_run(req, registry) for req in batch.requests])

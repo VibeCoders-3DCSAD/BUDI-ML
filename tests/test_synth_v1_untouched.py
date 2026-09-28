@@ -7,11 +7,11 @@ present, proving v1 was not "upgraded in place" when v2 was added.
 
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
+PIPELINE_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts" / "pipeline"
 
 
 def test_v1_generate_transactions_still_has_expense_gaussian() -> None:
-    src = (SCRIPTS_DIR / "generate_transactions.py").read_text()
+    src = (PIPELINE_DIR / "generate_transactions.py").read_text()
     assert "rng.normal(1.0, 0.15)" in src
     assert "max(0.5, min(2.0, variation))" in src
 
@@ -23,4 +23,4 @@ def test_v1_scripts_exist() -> None:
         "synthesizer.py",
         "preprocessor.py",
     ):
-        assert (SCRIPTS_DIR / name).is_file()
+        assert (PIPELINE_DIR / name).is_file()

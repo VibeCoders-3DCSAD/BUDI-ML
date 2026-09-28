@@ -1,19 +1,14 @@
 """Regression coverage for multi-year synthetic time-series handling."""
 
-import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-import train_forecaster  # noqa: E402
-from feature_engineering import compute_derived_features  # noqa: E402
-from feature_engineering_forecaster import process_persona  # noqa: E402
-from generate_transactions import generate_persona_transactions  # noqa: E402
-from preprocessor import generate_temporal_folds, load_anomaly_info  # noqa: E402
+from training.scripts.modeling import train_forecaster
+from training.scripts.pipeline.feature_engineering import compute_derived_features
+from training.scripts.pipeline.feature_engineering_forecaster import process_persona
+from training.scripts.pipeline.generate_transactions import generate_persona_transactions
+from training.scripts.pipeline.preprocessor import generate_temporal_folds, load_anomaly_info
 
 
 def _persona() -> dict:

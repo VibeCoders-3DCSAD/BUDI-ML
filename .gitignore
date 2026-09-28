@@ -32,7 +32,10 @@ dist/
 # Generated datasets and pipeline outputs (regenerate with training scripts).
 # NOTE: the top-level `models/` directory (new-scope FINAL artifacts +
 # metadata.json) is intentionally tracked and must NOT be ignored.
+RAW/
 training/datasets/
+# Raw FIES files are local source data and must never be committed.
+training/datasets/fies/
 training/synth/
 training/models/
 training/figures/

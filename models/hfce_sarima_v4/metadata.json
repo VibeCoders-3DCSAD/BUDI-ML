@@ -1,0 +1,37 @@
+{
+  "model_id": "hfce-sarima-v4-category-quarterly",
+  "family": "hfce_sarima_v4",
+  "created_at": "2026-09-27T21:28:17Z",
+  "training_commit": "a39aab4",
+  "training_data_hash": "ed99dc7d9fe7da2efe89eb79aa69a1f03b6eaf587a1b1825f3238a6e2570a6aa",
+  "framework": "statsmodels",
+  "framework_version": "0.15.0",
+  "python_version": "3.14.4",
+  "artifacts": [
+    "alcohol_tobacco.joblib",
+    "clothing_footwear.joblib",
+    "communication.joblib",
+    "education.joblib",
+    "food.joblib",
+    "furnishings_household.joblib",
+    "health.joblib",
+    "housing_water_utilities.joblib",
+    "miscellaneous_goods_services.joblib",
+    "recreation_culture.joblib",
+    "restaurants_hotels.joblib",
+    "transport.joblib"
+  ],
+  "feature_columns": [],
+  "metrics": {
+    "primary": {"name": "macro_test_mape_percent", "value": 5.223588128188048},
+    "secondary": {"macro_test_smape_percent": 5.113149086936706, "macro_test_mda_percent": 94.69696969696969}
+  },
+  "decision_rule": "lowest validation MAPE candidate per HFCE category",
+  "winner": "category_specific_sarima",
+  "winner_artifact": null,
+  "winner_reason": "each of 12 HFCE categories selects its own lowest-MAPE SARIMA candidate",
+  "winner_params": "recorded per category in evaluation.json",
+  "threshold": null,
+  "fitted": true,
+  "serving_note": "Used only to provide national category trend multipliers for quarterly personal spending projections; it does not model individual behavior."
+}

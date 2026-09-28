@@ -12,15 +12,12 @@ Covers:
 """
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
+from training.scripts.pipeline.preprocessor_v2 import run_preprocessing_v2
 
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from preprocessor_v2 import run_preprocessing_v2  # noqa: E402
+SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts" / "pipeline"
 
 # ---------------------------------------------------------------------------
 # P0 — v1 preprocessor.py untouched guard still green

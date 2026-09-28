@@ -27,5 +27,5 @@ Winner must beat the Tier-1 rule-based floor by **≥ 0.02 Macro-F1** (5-fold ex
 Regenerate reports/metadata from existing `evaluation.json` without retraining:
 
 ```bash
-python training/scripts/regenerate_artifacts.py
+python -m training.scripts.modeling.regenerate_artifacts
 ```

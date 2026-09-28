@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from training.scripts.generate_monthly_expenditures_v3 import generate_monthly_expenditures
+from training.scripts.pipeline.generate_monthly_expenditures_v3 import generate_monthly_expenditures
 
 
 def test_monthly_allocation_reconciles_every_available_year(tmp_path: Path):

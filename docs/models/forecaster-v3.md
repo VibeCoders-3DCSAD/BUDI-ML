@@ -35,3 +35,7 @@ V3 deliberately excludes calendar month and quarter features from this RF contra
 ## Evaluation Limit
 
 Evaluation is household-disjoint and reports MAE in PHP after rescaling. It tests whether the RF predicts the pipeline's synthetic monthly allocation for held-out households. It does not establish accuracy on observed household transaction history and must not authorize deployment by itself.
+
+## Service Activation
+
+Full-corpus RF training persists `models/forecaster_v3/random_forest.joblib`. After the naive and RF reports are compared, `compare_forecaster_v3_full.py` writes the compatible winner contract to `models/forecaster_v3/evaluation.json`. At startup, the service loads this RF artifact only when that contract names Random Forest as the winner; otherwise it retains the v2 forecaster.

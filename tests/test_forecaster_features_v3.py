@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-from training.scripts.feature_engineering_forecaster_v3 import build_features
+from training.scripts.pipeline.feature_engineering_forecaster_v3 import build_features
 
 
 def test_features_normalize_against_three_strictly_prior_months():

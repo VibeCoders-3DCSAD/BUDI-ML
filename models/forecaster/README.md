@@ -28,5 +28,5 @@ Winner must beat the naive baseline by **≥ 20% MAPE reduction**.
 Regenerate reports/metadata from existing `evaluation.json` without retraining:
 
 ```bash
-python training/scripts/regenerate_artifacts.py
+python -m training.scripts.modeling.regenerate_artifacts
 ```

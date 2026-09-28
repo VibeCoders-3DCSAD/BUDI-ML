@@ -9,7 +9,7 @@
 }
 ```
 
-> **What this is:** Companion to [`forecaster.md`](forecaster.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the v2 SARIMA artifact actually is. Serving behaviour is unchanged and is still described in `forecaster.md`.
+> **What this is:** Companion to [`forecaster.md`](forecaster.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the retired v2 SARIMA artifact actually is. The served `/api/v1/forecast/predict` endpoint now uses the HFCE quarterly forecaster described in `forecaster.md`.
 
 ---
 

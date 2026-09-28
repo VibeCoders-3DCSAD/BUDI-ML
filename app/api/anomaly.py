@@ -1,72 +1,52 @@
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_registry
-from app.models.registry import ModelRegistry
+from app.api.deps import TrustedHistoryContext, get_trusted_history_context
 from app.schemas.anomaly import (
     AnomalyRequest,
     AnomalyResponse,
     DetectionType,
-    OverspendingTransaction,
 )
 from app.schemas.common import ApiMetadata, ModuleStatus
 from app.services import anomaly_service
 
 router = APIRouter(prefix="/api/v1/anomaly", tags=["anomaly"])
+logger = logging.getLogger(__name__)
 
 
-def _run(registry: ModelRegistry, request: AnomalyRequest) -> AnomalyResponse:
+def _run(user_id: str, request: AnomalyRequest) -> AnomalyResponse:
     start = time.perf_counter()
-    anomalous = []
-    overspending: list[OverspendingTransaction] = []
-    status = ModuleStatus.SUCCESS
-
-    needs_model = request.detection_type in (DetectionType.ANOMALOUS, DetectionType.BOTH)
-    anomaly_model = registry.anomaly
-    if needs_model and anomaly_model is None:
-        raise HTTPException(status_code=503, detail="anomaly model not loaded; pending training")
-
-    try:
-        if needs_model:
-            assert anomaly_model is not None
-            anomalous = anomaly_service.detect(anomaly_model, request)
-
-        if request.detection_type in (DetectionType.OVERSPENDING, DetectionType.BOTH):
-            if not request.budget_allocations:
-                raise ValueError(
-                    "budget_allocations required when detection_type is OVERSPENDING or BOTH"
-                )
-            transactions = [t.model_dump() for t in request.transactions]
-            overspending = anomaly_service._overspending_detect(
-                transactions, [b.model_dump() for b in request.budget_allocations]
+    decisions = []
+    overspending = []
+    if request.detection_type in (DetectionType.ANOMALOUS, DetectionType.BOTH):
+        decisions = anomaly_service.detect(request.transactions)
+    if request.detection_type in (DetectionType.OVERSPENDING, DetectionType.BOTH):
+        if not request.budget_allocations:
+            raise HTTPException(
+                status_code=422,
+                detail="budget_allocations required when detection_type is OVERSPENDING or BOTH",
             )
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except Exception:
-        status = ModuleStatus.FALLBACK
-
-    # Confidence: max anomaly score if any anomalies detected, else 0.0
-    scores = [a.anomaly_score for a in anomalous]
-    confidence = round(max(scores), 4) if scores else 0.0
-
-    model_version = anomaly_model.model_id if anomaly_model is not None else "n/a"
+        overspending = anomaly_service.overspending_detect(
+            request.transactions, [budget.model_dump() for budget in request.budget_allocations]
+        )
     return AnomalyResponse(
         response_id=str(uuid.uuid4()),
         request_id=str(uuid.uuid4()),
-        user_id=request.user_id,
-        anomalous_transactions=anomalous,
+        user_id=user_id,
+        decisions=decisions,
         overspending_transactions=overspending,
-        model_version=model_version,
-        confidence=confidence,
-        status=status,
+        ruleset_version=anomaly_service.RULESET_VERSION,
+        status=ModuleStatus.SUCCESS,
         metadata=ApiMetadata(
             processing_time_ms=round((time.perf_counter() - start) * 1000, 2),
-            model_version=model_version,
+            model_version=anomaly_service.RULESET_VERSION,
+            strategy_used="personal_subcategory_iqr",
         ),
     )
 
@@ -82,14 +62,26 @@ class BatchResponse(BaseModel):
 @router.post("/detect", response_model=AnomalyResponse)
 async def detect(
     request: AnomalyRequest,
-    registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> AnomalyResponse:
-    return _run(registry, request)
+    logger.info(
+        "anomaly request received user_id=%s transactions=%d detection_type=%s",
+        history.user_id,
+        len(request.transactions),
+        request.detection_type,
+    )
+    return _run(history.user_id, request)
 
 
 @router.post("/detect/batch", response_model=BatchResponse)
 async def detect_batch(
     batch: BatchRequest,
-    registry: ModelRegistry = Depends(get_registry),
+    history: TrustedHistoryContext = Depends(get_trusted_history_context),
 ) -> BatchResponse:
-    return BatchResponse(results=[_run(registry, req) for req in batch.requests])
+    logger.info(
+        "anomaly batch request received user_id=%s requests=%d transactions=%d",
+        history.user_id,
+        len(batch.requests),
+        sum(len(request.transactions) for request in batch.requests),
+    )
+    return BatchResponse(results=[_run(history.user_id, req) for req in batch.requests])

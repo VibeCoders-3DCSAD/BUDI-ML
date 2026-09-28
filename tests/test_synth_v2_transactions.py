@@ -17,26 +17,23 @@ reconciliation (methodology: "anomalies after reconcile only; no
 re-reconcile after anomalies").
 """
 
-import sys
 from collections import defaultdict
 from pathlib import Path
 
 import pytest
-
-SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from generate_transactions_v2 import (  # noqa: E402
-    build_synth_v2_report,
-    generate_persona_transactions_v2,
-)
-from temporal_disaggregation import (  # noqa: E402
+from training.scripts.data.temporal_disaggregation import (
     HFCE_CATEGORIES,
     QUARTER_MONTHS,
     build_year_schedule,
     load_hfce_levels,
     quarter_weights,
 )
+from training.scripts.pipeline.generate_transactions_v2 import (
+    build_synth_v2_report,
+    generate_persona_transactions_v2,
+)
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "training" / "scripts" / "pipeline"
 
 
 def _persona() -> dict:
