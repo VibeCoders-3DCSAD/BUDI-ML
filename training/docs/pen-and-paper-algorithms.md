@@ -18,7 +18,7 @@
 | Classification (PFP) | `tier3_svm` (RBF SVM + Platt), with a questionnaire cold start and a Tier-1 rule fallback | Features, three-axis rules, questionnaire mapping. Full SVM kernel over 2,161 support vectors is not hand-complete; a 2-vector kernel step is included so the served formula is still executable. |
 | Forecasting v2 | Pooled `SARIMA(1,1,0)(1,0,0,12)` in `models/forecaster_v2/` | One-step pooled forecast from the committed coefficients, then peso rescaling. |
 | Anomaly alerts | `tier1_iqr` (1.5×IQR on 24 standardized features) | Quartiles, bounds, flag count, score, threshold. |
-| Budgeting | `scipy.optimize.linprog` (HiGHS) | Write the LP, bind LOCKED/PROTECTED/FREE, recover the unique optimum on a 4-category instance. |
+| Budgeting | `scipy.optimize.linprog` (HiGHS) | Write the LP, bind FIXED/MINIMUM/FLEXIBLE constraints, recover the unique optimum on a 4-category instance. |
 
 Companion documents: full pipeline walkthrough in [`pen-and-paper-simulation.md`](pen-and-paper-simulation.md); v2 training note in [`docs/models/forecaster-v2.md`](../../docs/models/forecaster-v2.md).
 
@@ -521,18 +521,17 @@ In matrix form the two deviation inequalities are `x_i − d_i ≤ t_i` and `−
 
 | Level | Bound on `x_i` | Meaning |
 | :--- | :--- | :--- |
-| `LOCKED` | `x_i = current_spend` | Already committed; cannot move |
-| `PROTECTED` | `max(floor, current_spend) ≤ x_i ≤ max(ceiling, that lower bound)` | Cannot go below what is already spent or the floor |
-| `FREE` | `floor ≤ x_i ≤ ceiling` | Optimizer may move inside the box |
+| `FIXED` | `x_i = floor = ceiling` | Exact configured amount; cannot move |
+| `MINIMUM` | `floor ≤ x_i ≤ ceiling` | Cannot go below the configured floor |
+| `FLEXIBLE` | `floor ≤ x_i ≤ ceiling` | Optimizer may move inside the box, including to zero |
 
-**Solve.** HiGHS simplex / interior-point. On paper, bind the LOCKED equalities first, meet every target that still fits inside its bounds, and assign any residual pesos to the lowest-weight category that still has unused ceiling.
+**Solve.** HiGHS simplex / interior-point. On paper, bind the FIXED equalities first, meet every target that still fits inside its bounds, and assign any residual pesos to the lowest-weight category that still has unused ceiling.
 
 **Feasibility label** (after a successful solve):
 
 | Status | Test |
 | :--- | :--- |
-| `INFEASIBLE` | solver failed, or a bound/lock is violated after rounding |
-| `REDUCED` | constraints hold but `Σ x_i / funds < 1` |
+| `INFEASIBLE` | no allocation satisfies every hard constraint; the response identifies the shortfall and affected categories |
 | `FEASIBLE` | constraints hold and utilization ≈ 1 |
 
 ### 4.2 Worked example
@@ -541,21 +540,21 @@ Funds = ₱25,000. Four categories (this is the payload in `tests/test_budget.py
 
 | Category | Level | floor | ceiling | current | weight | ratio | target `t` |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| food | PROTECTED | 6,000 | 9,000 | 6,800 | 0.4 | 0.28 | 7,000 |
-| rent | LOCKED | 8,000 | 8,000 | 8,000 | 0.3 | 0.32 | 8,000 |
-| leisure | FREE | 0 | 5,000 | 2,000 | 0.2 | 0.15 | 3,750 |
-| savings | FREE | 0 | 6,000 | 0 | 0.1 | 0.25 | 6,250 |
+| food | MINIMUM | 6,000 | 9,000 | 6,800 | 0.4 | 0.28 | 7,000 |
+| rent | FIXED | 8,000 | 8,000 | 8,000 | 0.3 | 0.32 | 8,000 |
+| leisure | FLEXIBLE | 0 | 5,000 | 2,000 | 0.2 | 0.15 | 3,750 |
+| savings | FLEXIBLE | 0 | 6,000 | 0 | 0.1 | 0.25 | 6,250 |
 
 **Step 1 — bounds**
 
 ```text
-food:    lo = max(6,000, 6,800) = 6,800,   hi = 9,000
+food:    lo = 6,000,   hi = 9,000
 rent:    lo = hi = 8,000
 leisure: [0, 5,000]
 savings: [0, 6,000]
 ```
 
-**Step 2 — drop LOCKED rent**
+**Step 2 — reserve FIXED rent**
 
 ```text
 x_food + x_leisure + x_savings = 25,000 − 8,000 = 17,000
@@ -577,8 +576,8 @@ objective = 0.2×250 + 0.1×250 = 75
 
 ```text
 sum x              = 25,000                         ✓
-rent locked        = 8,000                          ✓
-food in [6800, 9000]                                ✓
+rent fixed         = 8,000                          ✓
+food in [6000, 9000]                                ✓
 leisure in [0, 5000]                                ✓
 savings in [0, 6000]                                ✓
 d_i = |x_i − t_i|                                   ✓
@@ -588,7 +587,7 @@ Utilization = 1.0, constraint satisfaction = 1.0 → **FEASIBLE**. HiGHS returns
 
 **Boxed answer:** `(7,000, 8,000, 4,000, 6,000)`, status **FEASIBLE**, objective **75**.
 
-If the solver cannot find any `x` inside the bounds that sums to funds, the service raises `budget LP infeasible`. There is no silent floor-relaxation in the current code path; `REDUCED` is reserved for a successful solve that fails to spend everything because ceilings cap the sum.
+If the solver cannot find any `x` inside the bounds that sums to funds, the service returns a structured `INFEASIBLE` recommendation. It never relaxes Fixed or Minimum rules.
 
 ---
 

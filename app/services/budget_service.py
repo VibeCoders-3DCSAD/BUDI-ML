@@ -5,6 +5,7 @@ from scipy.optimize import linprog
 
 from app.schemas.budget import (
     BudgetAllocation,
+    BudgetCategory,
     BudgetExplanation,
     BudgetRecommendation,
     BudgetRequest,
@@ -15,7 +16,7 @@ EPS = 1e-9
 
 
 def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetExplanation]]:
-    """Solve the allocation LP (Budget Optimizer MDD v1.0, Tier 2).
+    """Solve one monthly Financial Plan allocation without relaxing user rules.
 
     Decision variables: allocation `x_i` plus deviation `d_i` per category,
     where `d_i >= |x_i - target_i|`. The LP minimizes the weighted sum of
@@ -24,31 +25,37 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
 
     Constraints:
       - sum of allocations == available funds,
-      - LOCKED categories held at their fixed amount (floor = ceiling = fixed),
-      - PROTECTED categories keep at least current spend,
-      - FREE categories respect [floor, ceiling].
+      - FIXED categories held at their configured amount,
+      - MINIMUM categories keep their configured floor,
+      - FLEXIBLE categories respect [floor, ceiling].
 
     Feasibility:
       - FEASIBLE: all constraints met, allocations sum to available funds.
-      - REDUCED: LP finds a solution but ceiling constraints prevent full
-        utilization of available funds.
       - INFEASIBLE: no allocation satisfies all hard constraints.
     """
     categories = request.categories
     n = len(categories)
     funds = request.available_funds
 
+    forecast_targets = _forecast_targets(request)
     target_ratios = request.target_ratios or {}
-    targets = np.array([funds * target_ratios.get(c.category_id, 0.0) for c in categories])
+    targets = np.array(
+        [
+            forecast_targets.get(
+                category.category_id, funds * target_ratios.get(category.category_id, 0.0)
+            )
+            for category in categories
+        ]
+    )
     weights = np.array([max(cat.priority_weight, EPS) for cat in categories])
 
     for cat in categories:
-        if cat.restriction_level == RestrictionLevel.LOCKED:
-            if cat.ceiling < cat.floor:
-                raise ValueError(f"category {cat.category_id}: ceiling below floor")
-        elif cat.restriction_level == RestrictionLevel.PROTECTED:
-            if cat.ceiling < cat.floor:
-                raise ValueError(f"category {cat.category_id}: ceiling below floor")
+        if cat.ceiling < cat.floor:
+            raise ValueError(f"category {cat.category_id}: ceiling below floor")
+        if cat.restriction_level == RestrictionLevel.FIXED and abs(cat.floor - cat.ceiling) > EPS:
+            raise ValueError(
+                f"category {cat.category_id}: fixed amount requires equal floor and ceiling"
+            )
 
     # Objective: minimize sum(w_i * d_i)  -> c = [0]*n allocations, [w] deviations
     c = np.concatenate([np.zeros(n), weights])
@@ -70,18 +77,19 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         A_ub.append(row_hi)
         b_ub.append(-targets[i])
 
-    # Bounds: allocations respect restriction levels; deviations are free.
-    bounds = []
-    for cat in categories:
-        if cat.restriction_level == RestrictionLevel.LOCKED:
-            lo = hi = cat.current_spend
-        elif cat.restriction_level == RestrictionLevel.PROTECTED:
-            lo = max(cat.floor, cat.current_spend)
-            hi = max(cat.ceiling, lo)
-        else:
-            lo = cat.floor
-            hi = cat.ceiling
-        bounds.append((lo, hi))
+    # current_spend remains reporting context; user rules define plan bounds.
+    allocation_bounds = [_allocation_bounds(category) for category in categories]
+    minimum_required = sum(bound[0] for bound in allocation_bounds)
+    maximum_available = sum(bound[1] for bound in allocation_bounds)
+    if minimum_required > funds + EPS:
+        return _infeasible_recommendation(
+            categories, allocation_bounds, funds, minimum_required, "minimum_required"
+        ), []
+    if maximum_available < funds - EPS:
+        return _infeasible_recommendation(
+            categories, allocation_bounds, funds, maximum_available, "maximum_capacity"
+        ), []
+    bounds: list[tuple[float, float | None]] = [*allocation_bounds]
     bounds.extend([(0.0, None)] * n)
 
     A_eq = [[1.0 if j < n else 0.0 for j in range(2 * n)]]
@@ -98,30 +106,29 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     )
 
     if not result.success:
-        raise ValueError(f"budget LP infeasible: {result.message}")
+        return _infeasible_recommendation(
+            categories, allocation_bounds, funds, minimum_required, "solver"
+        ), []
 
     allocations = np.maximum(result.x[:n], 0.0)
     utilization = float(allocations.sum()) / funds if funds > 0 else 0.0
 
     constraint_satisfaction = 1.0
     for i, cat in enumerate(categories):
-        if cat.restriction_level == RestrictionLevel.LOCKED and abs(allocations[i] - cat.current_spend) > EPS:
+        if (
+            cat.restriction_level == RestrictionLevel.FIXED
+            and abs(allocations[i] - cat.floor) > EPS
+        ):
             constraint_satisfaction = 0.0
         if allocations[i] < cat.floor - EPS or allocations[i] > cat.ceiling + EPS:
             constraint_satisfaction = 0.0
 
-    # Determine feasibility per MDD: FEASIBLE / REDUCED / INFEASIBLE
-    fully_utilized = utilization > 1.0 - EPS
-    if constraint_satisfaction < 0.99:
-        feasibility = "INFEASIBLE"
-    elif not fully_utilized:
-        feasibility = "REDUCED"
-    else:
-        feasibility = "FEASIBLE"
+    # A successful equality-constrained LP is fully utilized by definition.
+    feasibility = "INFEASIBLE" if constraint_satisfaction < 0.99 else "FEASIBLE"
     recommendation = BudgetRecommendation(
         allocations=[
             BudgetAllocation(category_id=cat.category_id, amount=round(float(a), 2))
-            for cat, a in zip(categories, allocations)
+            for cat, a in zip(categories, allocations, strict=True)
         ],
         utilization_rate=round(utilization, 4),
         constraint_satisfaction=round(constraint_satisfaction, 4),
@@ -129,21 +136,67 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     )
 
     explanations = []
-    for cat, a in zip(categories, allocations):
-        if cat.restriction_level == RestrictionLevel.LOCKED:
-            explanations.append(BudgetExplanation(
-                category_id=cat.category_id,
-                reason=f"LOCKED category — held at {a:.2f}",
-            ))
-        elif cat.restriction_level == RestrictionLevel.PROTECTED:
-            explanations.append(BudgetExplanation(
-                category_id=cat.category_id,
-                reason=f"PROTECTED category — held at {a:.2f}",
-            ))
+    for cat, a in zip(categories, allocations, strict=True):
+        if cat.restriction_level == RestrictionLevel.FIXED:
+            explanations.append(
+                BudgetExplanation(
+                    category_id=cat.category_id,
+                    reason=f"FIXED category held at {a:.2f}",
+                )
+            )
+        elif cat.restriction_level == RestrictionLevel.MINIMUM:
+            explanations.append(
+                BudgetExplanation(
+                    category_id=cat.category_id,
+                    reason=f"MINIMUM category held at {a:.2f} or above",
+                )
+            )
         elif a > 0:
-            explanations.append(BudgetExplanation(
-                category_id=cat.category_id,
-                reason="Allocation set within floor/ceiling bounds",
-            ))
+            explanations.append(
+                BudgetExplanation(
+                    category_id=cat.category_id,
+                    reason="Allocation set within floor/ceiling bounds",
+                )
+            )
 
     return recommendation, explanations
+
+
+def _allocation_bounds(category: BudgetCategory) -> tuple[float, float]:
+    if category.restriction_level == RestrictionLevel.FIXED:
+        return (category.floor, category.floor)
+    return (category.floor, category.ceiling)
+
+
+def _forecast_targets(request: BudgetRequest) -> dict[str, float]:
+    if request.forecast is None:
+        return {}
+    return {point.category: point.amount for point in request.forecast.category_forecasts}
+
+
+def _infeasible_recommendation(
+    categories: list[BudgetCategory],
+    bounds: list[tuple[float, float]],
+    funds: float,
+    constrained_total: float,
+    reason: str,
+) -> BudgetRecommendation:
+    shortfall = abs(constrained_total - funds)
+    allocated_amount = sum(lower for lower, _upper in bounds)
+    return BudgetRecommendation(
+        allocations=[
+            BudgetAllocation(category_id=category.category_id, amount=round(lower, 2))
+            for category, (lower, _upper) in zip(categories, bounds, strict=True)
+        ],
+        utilization_rate=round(min(allocated_amount / funds, 1.0), 4),
+        constraint_satisfaction=0.0,
+        feasibility="INFEASIBLE",
+        required_funds=round(constrained_total, 2),
+        available_funds=round(funds, 2),
+        shortfall=round(shortfall, 2),
+        conflicting_categories=[
+            category.category_id
+            for category, (lower, upper) in zip(categories, bounds, strict=True)
+            if lower > 0 or (reason == "maximum_capacity" and upper > 0)
+        ],
+    )

@@ -39,7 +39,7 @@ Each spending category (food, transport, bills, savings, etc.) has:
 | **Restriction level** | One of three levels (see below). |
 | **Floor** | Minimum amount that MUST go to this category. |
 | **Ceiling** | Maximum amount that CAN go to this category. |
-| **Current spend** | How much has already been spent in this category so far. |
+| **Current spend** | Tracking context only. It does not change a configured allocation rule. |
 | **Priority weight** (0–1) | How important is it to the user that this category gets its preferred amount? |
 
 ### 3. Target ratios
@@ -58,9 +58,9 @@ The user's *preferred* spending proportions — e.g., "I want 40% on food, 20% o
 
 | Level | Rule | Example |
 |---|---|---|
-| **LOCKED** | Fixed amount. Floor = ceiling = current spend. Cannot change. | Rent already paid at ₱8,000 — it's locked in. |
-| **PROTECTED** | Must receive at least the maximum of (floor, current spend). Can receive more. | Food: floor is ₱5,000, already spent ₱6,200 — must get at least ₱6,200. |
-| **FREE** | Flexible. Must stay between floor and ceiling. | Entertainment: between ₱0 and ₱3,000, optimizer decides. |
+| **FIXED** | Exact configured amount. Floor and ceiling must be equal. | Rent: exactly ₱8,000. |
+| **MINIMUM** | Non-reducible configured floor. Can receive more within its ceiling. | Food: at least ₱5,000. |
+| **FLEXIBLE** | Zero or configured floor, up to its ceiling. | Entertainment: between ₱0 and ₱3,000. |
 
 ---
 
@@ -77,9 +77,9 @@ The optimizer frames budget allocation as a **linear program** — a mathematica
 | Constraint | Mathematical form | Plain meaning |
 |---|---|---|
 | **Budget sum** | Σ allocations = available funds | Every peso must be allocated somewhere. |
-| **LOCKED** | Allocation = current spend | Locked categories get exactly what they've already spent. |
-| **PROTECTED** | Allocation ≥ max(floor, current spend) | Protected categories can't get less than what's already committed. |
-| **FREE** | floor ≤ allocation ≤ ceiling | Free categories stay within their bounds. |
+| **FIXED** | Allocation = floor = ceiling | Fixed categories get their configured exact amount. |
+| **MINIMUM** | Allocation ≥ floor | Minimum categories cannot be reduced below their configured floor. |
+| **FLEXIBLE** | floor ≤ allocation ≤ ceiling | Flexible categories stay within their bounds and may receive zero. |
 | **Deviation** | deviation ≥ allocation − target AND deviation ≥ target − allocation | Deviation captures the absolute gap between what was allocated and what was desired. |
 
 ### 2. Solving
@@ -88,13 +88,12 @@ The problem is passed to `scipy.optimize.linprog` with the **HiGHS** solver — 
 
 ### 3. Feasibility check
 
-Not all requests can be satisfied. The optimizer reports one of three states:
+Not all requests can be satisfied. The optimizer reports one of two states:
 
 | State | What it means |
 |---|---|
 | **FEASIBLE** | All constraints can be met simultaneously. The solution is optimal. |
-| **REDUCED** | The original request was infeasible (e.g., required minimums exceed available funds), so the optimizer **relaxed some constraints** to find the best possible allocation. The user is told what changed. |
-| **INFEASIBLE** | No valid allocation exists, even with relaxation. The user needs to adjust their inputs (increase funds, lower floors, etc.). |
+| **INFEASIBLE** | No valid allocation satisfies every hard constraint. The optimizer never relaxes Fixed or Minimum rules. It returns the required total, available funds, shortfall, and affected categories so the user can decide what to change. |
 
 ---
 
@@ -107,7 +106,7 @@ The API returns a structured recommendation:
 | **Allocations** (list) | For each category: the recommended amount, floor, ceiling, target, and how much deviation was accepted. |
 | **Budget utilization** (0–1) | What fraction of available funds is allocated (ideally 1.0). |
 | **Constraint satisfaction** (0–1) | What fraction of constraints are fully met (1.0 = all constraints satisfied). |
-| **Feasibility status** | `FEASIBLE`, `REDUCED`, or `INFEASIBLE`. |
+| **Feasibility status** | `FEASIBLE` or `INFEASIBLE`. |
 | **Per-category explanations** | A plain-language reason for each allocation: "Food received ₱12,000 (target was ₱12,000 — exact match)" or "Transport was reduced to ₱4,500 to stay within available funds." |
 | **Overall explanation** | A summary of the allocation strategy. |
 
@@ -122,7 +121,7 @@ Constraint satisfaction: 100%
 Allocations:
   Food:         ₱12,000  (target ₱12,000, deviation: 0)     ← exact match
   Transport:    ₱ 6,000  (target ₱ 6,000, deviation: 0)     ← exact match
-  Bills:        ₱ 8,000  (LOCKED — matches current spend)    ← no choice
+  Bills:        ₱ 8,000  (FIXED — configured exact amount)   ← no choice
   Savings:      ₱ 3,000  (target ₱ 4,500, deviation: ₱1,500) ← reduced to fit
   Entertainment:₱ 1,000  (target ₱ 1,500, deviation: ₱  500) ← reduced to fit
 
@@ -135,9 +134,9 @@ locked Bills allocation, but stayed within their allowed bounds.
 
 ## How other modules use this
 
-- **Forecasting** provides the estimated category-level spending that feeds into the optimizer's `current_spend` and `ceiling` values.
+- **Forecasting** provides the estimated category-level spending used as the initial allocation target for Flexible categories. It can raise, but never lower, a Minimum target; Fixed categories remain exact.
 - **Anomaly Detector** can flag transactions that deviate from the optimizer's plan ("You've overspent in Food by ₱2,000 relative to your budget").
-- **PFP Classifier** informs initial restriction levels — an "At-Risk" user may have tighter LOCKED/PROTECTED constraints, while a "Tolerant" user gets more FREE categories.
+- **PFP Classifier** informs initial restriction levels — an "At-Risk" user may have tighter Fixed/Minimum constraints, while a "Tolerant" user gets more Flexible categories.
 - **User dashboard** displays the allocation as a visual budget card, with real-time tracking of how actual spending compares to the plan.
 
 ---

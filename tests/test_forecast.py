@@ -126,6 +126,13 @@ def test_predict_returns_personalized_hfce_category_forecast(client):
     assert point["amount"] > 0
     assert point["user_baseline_amount"] == 1_266.67
     assert point["hfce_multiplier"] > 0
+    snapshot = response.json()["snapshot"]
+    assert snapshot["month"] == point["month"]
+    assert snapshot["total_amount"] == point["amount"]
+    assert snapshot["category_forecasts"] == [{"category": "food", "amount": point["amount"]}]
+    assert snapshot["model_version"] == response.json()["model_version"]
+    assert snapshot["generated_at"].endswith("Z") or "+00:00" in snapshot["generated_at"]
+    assert snapshot["quality"] == "PERSONALIZED"
 
 
 def test_predict_rejects_history_without_completed_current_year_month(client):

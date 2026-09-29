@@ -9,15 +9,14 @@
   "objective": "minimize sum(w_i * d_i)  # weighted deviation from user targets",
   "hard_constraints": [
     "sum(x) == available_funds",
-    "LOCKED: floor == ceiling == current_spend",
-    "PROTECTED: x >= max(floor, current_spend)",
-    "FREE: floor <= x <= ceiling",
+    "FIXED: floor == ceiling",
+    "MINIMUM: x >= floor",
+    "FLEXIBLE: floor <= x <= ceiling",
     "d >= |x - target|"
   ],
   "eps": 1e-09,
   "feasibility_states": [
     "FEASIBLE",
-    "REDUCED",
     "INFEASIBLE"
   ],
   "source_data": "training/synth/personas.parquet",

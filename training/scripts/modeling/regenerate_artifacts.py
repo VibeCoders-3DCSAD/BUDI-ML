@@ -110,7 +110,6 @@ def evaluate_budget(n_users: int = 600, seed: int = 42) -> dict:
 
     satisfaction, utilizations, deviations = [], [], []
     infeasible = 0
-    reduced = 0
     feasible = 0
 
     for _, row in sample.iterrows():
@@ -124,11 +123,11 @@ def evaluate_budget(n_users: int = 600, seed: int = 42) -> dict:
         categories = []
         for c in category_order:
             if c == "housing":
-                level = RestrictionLevel.LOCKED
+                level = RestrictionLevel.FIXED
                 floor = spends[c]
                 ceiling = spends[c]
             else:
-                level = RestrictionLevel.FREE
+                level = RestrictionLevel.FLEXIBLE
                 floor = 0.0
                 ceiling = max(spends[c] * 1.5, 1.0)
             categories.append(
@@ -168,12 +167,10 @@ def evaluate_budget(n_users: int = 600, seed: int = 42) -> dict:
         )
         if recommendation.feasibility == "FEASIBLE":
             feasible += 1
-        elif recommendation.feasibility == "REDUCED":
-            reduced += 1
-        else:
+        elif recommendation.feasibility == "INFEASIBLE":
             infeasible += 1
 
-    total = feasible + reduced + infeasible
+    total = feasible + infeasible
     return {
         "generated_at": utc_now(),
         "task": "budget_optimization",
@@ -190,7 +187,7 @@ def evaluate_budget(n_users: int = 600, seed: int = 42) -> dict:
         "constraint_satisfaction_rate": float(np.mean(satisfaction)) if satisfaction else 0.0,
         "budget_utilization_rate": float(np.mean(utilizations)) if utilizations else 0.0,
         "mean_deviation": float(np.mean(deviations)) if deviations else 0.0,
-        "feasibility": f"{feasible}/{total} FEASIBLE, {reduced}/{total} REDUCED, {infeasible}/{total} INFEASIBLE",
+        "feasibility": f"{feasible}/{total} FEASIBLE, {infeasible}/{total} INFEASIBLE",
         "feature_columns": [],
         "metrics": None,
     }
@@ -216,13 +213,13 @@ def regenerate_budget() -> Path:
                 "objective": "minimize sum(w_i * d_i)  # weighted deviation from user targets",
                 "hard_constraints": [
                     "sum(x) == available_funds",
-                    "LOCKED: floor == ceiling == current_spend",
-                    "PROTECTED: x >= max(floor, current_spend)",
-                    "FREE: floor <= x <= ceiling",
+                    "FIXED: floor == ceiling",
+                    "MINIMUM: x >= floor",
+                    "FLEXIBLE: floor <= x <= ceiling",
                     "d >= |x - target|",
                 ],
                 "eps": 1e-9,
-                "feasibility_states": ["FEASIBLE", "REDUCED", "INFEASIBLE"],
+                "feasibility_states": ["FEASIBLE", "INFEASIBLE"],
                 "source_data": "training/synth/personas.parquet",
                 "evaluation": "models/budget/evaluation.json",
             },

@@ -433,16 +433,16 @@ Per category c: allocation `x_c` + slack/deviation `d_c`; target spend `t_c`; we
 minimize     Σ_c w_c · d_c
 subject to   Σ_c x_c                  = funds          (allocate everything)
              x_c ≥ t_c − d_c   (and x_c ≤ t_c + d_c)   (deviation from target d_c ≥ 0)
-             LOCKED:    x_c == cur_c
-             PROTECTED: x_c ≥ max(lo_c, cur_c)
-             FREE:      lo_c ≤ x_c ≤ hi_c
+              FIXED:     x_c == lo_c == hi_c
+              MINIMUM:   x_c ≥ lo_c
+              FLEXIBLE:  lo_c ≤ x_c ≤ hi_c
 ```
 
-> **De-jargonized:** The solver chooses how much money `x_c` to put in each category. It tries to minimize weighted deviations `d_c` from target spending. It must allocate all the funds. Some categories are locked and cannot change. Some are protected and must get at least their floor or current spend. Free categories can move within their allowed range. The output can be FEASIBLE, REDUCED, or INFEASIBLE.
+> **De-jargonized:** The solver chooses how much money `x_c` to put in each category. It tries to minimize weighted deviations `d_c` from target spending. It must allocate all the funds. Fixed categories cannot change, Minimum categories cannot go below their configured floor, and Flexible categories can move within their allowed range. The output is FEASIBLE or INFEASIBLE.
 
-Output feasibility: `FEASIBLE` (converged), `REDUCED` (relaxed floors), `INFEASIBLE`.
+Output feasibility: `FEASIBLE` (converged) or `INFEASIBLE` (hard constraints cannot fit).
 
-> **De-jargonized:** FEASIBLE means all rules were met. REDUCED means the solver had to loosen some floors to find a solution. INFEASIBLE means no solution exists under the given rules.
+> **De-jargonized:** FEASIBLE means all rules were met. INFEASIBLE means no solution exists under the given rules, so the response identifies the shortfall instead of loosening a Fixed or Minimum rule.
 
 ---
 
@@ -704,13 +704,13 @@ Simplest reproducible LP: persona A allocates a ₱5,000 surplus across `{food, 
 minimize   w_food·d_food + w_housing·d_housing + w_trans·d_trans + w_health·d_health + w_sav·d_sav
 s.t.       Σ x = 5,000
            x_c + d_c ≥ t_c ,   x_c − d_c ≤ t_c ,   d_c ≥ 0
-           housing LOCKED = 1,800      (must keep current rent spend)
+            housing FIXED = 1,800       (configured exact rent amount)
            x_food ∈ [1,000, 1,800];  x_trans ∈ [200, 900];  x_health ∈ [0, 500];  x_sav ∈ [0, 1,500]
 ```
 
 Feasible optimum: `x = (1,500, 1,800, 750, 250, 700)`, `d = (0, 300, 0, 0, 100)`  
 → objective `= w_housing·300 + w_sav·100`, utilization 5,000/5,000 = 1.0 → `FEASIBLE`.  
-(If no allocation reaches all targets the solver relaxes boundaries and reports `REDUCED`.)
+(If no allocation satisfies all constraints, the solver returns `INFEASIBLE` without relaxing boundaries.)
 
 > **De-jargonized:** The person has ₱5,000 extra to allocate. The targets are food ₱1,500, housing ₱1,500, transport ₱750, health ₱250, savings ₱1,000. Housing is locked at ₱1,800, so it gets ₱300 more than target. To keep the total at ₱5,000, savings gets ₱700, which is ₱300 below target. All other categories hit their targets. The only deviations are housing +300 and savings −100? Wait, target savings is 1,000, allocation is 700, so deviation is 300. So objective is weighted sum of those deviations. All money is allocated, so utilization is 1.0, and the solution is feasible.
 
@@ -742,7 +742,7 @@ Continue.
 | Anomaly threshold | 0.125 (score = flags/24) | `models/anomaly/metadata.json` | Flag if at least 3 of 24 features are outside their IQR bounds. |
 | Anomaly test stats | PR-AUC 0.0550; P 0.0653; R 0.6723; F2 0.2351; acc 0.7004 | `models/anomaly/metadata.json` | Precision is low, recall is high, F2 favors recall; overall accuracy is 70%. |
 | Anomaly surface rule | amount > 2,000 | `anomaly_service.py` | Any transaction over ₱2,000 is also shown to the user. |
-| Budget solver | `scipy.optimize.linprog(method="highs")`, LOCKED/PROTECTED/FREE | `budget_service.py` | A standard optimizer divides money while respecting locked, protected, and free categories. |
+| Budget solver | `scipy.optimize.linprog(method="highs")`, FIXED/MINIMUM/FLEXIBLE | `budget_service.py` | A standard optimizer divides money while respecting exact, minimum, and flexible categories. |
 | Budget metrics | constraint satisfaction 1.0; utilization 1.0; mean deviation 0.0410 | `models/budget/metadata.json` | All rules were met, all money was allocated, and average deviation from targets was 4.1%. |
 | Split | 70/15/15 stratified → 8,400 / 1,800 / 1,800 personas | `preprocessor.py` | Data is split into train/validation/test while keeping the same profile mix. |
 | Folds | 5 expanding, 1-month embargo | `training/datasets/processed/temporal_folds.json` | Forecasting tests train on past months, skip a buffer month, then predict the next month. |

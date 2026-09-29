@@ -21,7 +21,7 @@
 | Constraint satisfaction rate | 1.0000 |
 | Budget utilization rate | 1.0000 |
 | Mean deviation from user preferences | 0.0410 |
-| Feasibility | 541/600 FEASIBLE, 0/600 REDUCED, 59/600 INFEASIBLE |
+| Feasibility | 541/600 FEASIBLE, 59/600 INFEASIBLE |
 
 ## Per-Fold Results
 

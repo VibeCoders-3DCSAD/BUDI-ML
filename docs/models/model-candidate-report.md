@@ -84,8 +84,8 @@ here means solver/runtime cost and interface complexity, ascending lightest → 
 | 5 | LLM-driven personal budgeting | very heavy (LLM) | de Zarza et al. (LLM budgeting optimization, B2, supporting; `A--DeZarza-2023` intake, roster cites 2024) | Out of scope for v1 (offline-first, no token API) |
 
 Decision rule: the LP must meet all hard constraints (Constraint Satisfaction Rate =
-1.0) with minimal deviation from the user's target ratios; `REDUCED`/`INFEASIBLE`
-fallbacks are explicitly modeled in `budget_service.py`. Multi-criteria v2 becomes the
+1.0) with minimal deviation from the user's target ratios; infeasible requests are
+returned without relaxing hard constraints by `budget_service.py`. Multi-criteria v2 becomes the
 winner only if it exceeds the LP's deviation-from-preferences KPI without violating
 constraints.
 

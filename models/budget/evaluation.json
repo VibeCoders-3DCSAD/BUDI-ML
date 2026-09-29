@@ -11,7 +11,7 @@
   "constraint_satisfaction_rate": 1.0,
   "budget_utilization_rate": 1.0,
   "mean_deviation": 0.041041456301311854,
-  "feasibility": "541/600 FEASIBLE, 0/600 REDUCED, 59/600 INFEASIBLE",
+  "feasibility": "541/600 FEASIBLE, 59/600 INFEASIBLE",
   "feature_columns": [],
   "metrics": null
 }

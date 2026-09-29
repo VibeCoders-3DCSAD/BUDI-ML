@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -13,7 +14,7 @@ from app.api.deps import (
 )
 from app.models.registry import ModelRegistry
 from app.schemas.common import ApiMetadata, ModuleStatus
-from app.schemas.forecast import ForecastRequest, ForecastResponse
+from app.schemas.forecast import ExpenseForecastSnapshot, ForecastQuality, ForecastRequest, ForecastResponse, ForecastedExpense
 from app.services import forecast_service
 
 router = APIRouter(prefix="/api/v1/forecast", tags=["forecast"])
@@ -40,11 +41,20 @@ async def predict(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     model_version = registry.hfce_sarima.model_id
+    snapshot = ExpenseForecastSnapshot(
+        month=points[0].month,
+        total_amount=round(sum(point.amount for point in points), 2),
+        category_forecasts=[ForecastedExpense(category=point.category, amount=point.amount) for point in points],
+        model_version=model_version,
+        generated_at=datetime.now(timezone.utc),
+        quality=ForecastQuality.PERSONALIZED,
+    )
     return ForecastResponse(
         response_id=str(uuid.uuid4()),
         request_id=request.user_id,
         user_id=request.user_id,
         forecasts=points,
+        snapshot=snapshot,
         model_version=model_version,
         status=ModuleStatus.SUCCESS,
         metadata=ApiMetadata(

@@ -335,12 +335,12 @@ Per category c: allocation `x_c` + slack/deviation `d_c`; target spend `t_c`; we
 minimize     Σ_c w_c · d_c
 subject to   Σ_c x_c                  = funds          (allocate everything)
              x_c ≥ t_c − d_c   (and x_c ≤ t_c + d_c)   (deviation from target d_c ≥ 0)
-             LOCKED:    x_c == cur_c
-             PROTECTED: x_c ≥ max(lo_c, cur_c)
-             FREE:      lo_c ≤ x_c ≤ hi_c
+              FIXED:     x_c == lo_c == hi_c
+              MINIMUM:   x_c ≥ lo_c
+              FLEXIBLE:  lo_c ≤ x_c ≤ hi_c
 ```
 
-Output feasibility: `FEASIBLE` (converged), `REDUCED` (relaxed floors), `INFEASIBLE`.
+Output feasibility: `FEASIBLE` (converged) or `INFEASIBLE` (hard constraints cannot fit).
 
 ---
 
@@ -492,13 +492,13 @@ health, savings}` with targets `{0.30, 0.30, 0.15, 0.05, 0.20}·5,000 = {1,500, 
 minimize   w_food·d_food + w_housing·d_housing + w_trans·d_trans + w_health·d_health + w_sav·d_sav
 s.t.       Σ x = 5,000
            x_c + d_c ≥ t_c ,   x_c − d_c ≤ t_c ,   d_c ≥ 0
-           housing LOCKED = 1,800      (must keep current rent spend)
+            housing FIXED = 1,800       (configured exact rent amount)
            x_food ∈ [1,000, 1,800];  x_trans ∈ [200, 900];  x_health ∈ [0, 500];  x_sav ∈ [0, 1,500]
 ```
 
 Feasible optimum: `x = (1,500, 1,800, 750, 250, 700)`, `d = (0, 300, 0, 0, 100)`
 → objective `= w_housing·300 + w_sav·100`, utilization 5,000/5,000 = 1.0 → `FEASIBLE`.
-(If no allocation reaches all targets the solver relaxes boundaries and reports `REDUCED`.)
+(If no allocation satisfies all constraints, the solver returns `INFEASIBLE` without relaxing boundaries.)
 
 ---
 
@@ -520,7 +520,7 @@ Feasible optimum: `x = (1,500, 1,800, 750, 250, 700)`, `d = (0, 300, 0, 0, 100)`
 | Anomaly threshold | 0.125 (score = flags/24) | `models/anomaly/metadata.json` |
 | Anomaly test stats | PR-AUC 0.0550; P 0.0653; R 0.6723; F2 0.2351; acc 0.7004 | `models/anomaly/metadata.json` |
 | Anomaly surface rule | amount > 2,000 | `anomaly_service.py` |
-| Budget solver | `scipy.optimize.linprog(method="highs")`, LOCKED/PROTECTED/FREE | `budget_service.py` |
+| Budget solver | `scipy.optimize.linprog(method="highs")`, FIXED/MINIMUM/FLEXIBLE | `budget_service.py` |
 | Budget metrics | constraint satisfaction 1.0; utilization 1.0; mean deviation 0.0410 | `models/budget/metadata.json` |
 | Split | 70/15/15 stratified → 8,400 / 1,800 / 1,800 personas | `preprocessor.py` |
 | Folds | 5 expanding, 1-month embargo | `training/datasets/processed/temporal_folds.json` |
