@@ -58,5 +58,6 @@ HFCE forecast amount so the result remains explainable.
 ## Related Artifacts
 
 - `models/hfce_sarima_v4/` contains one quarterly SARIMA artifact per supported category.
-- `training/scripts/modeling/train_hfce_sarima_v4.py` trains and evaluates those artifacts.
+- `models/hfce_sarima_v4/evaluation_report.md` records the category-specific model selection, chronological validation design, and held-out results.
+- `training/scripts/modeling/train_hfce_sarima_v4.py` trains and evaluates those artifacts using the reproducible quarterly search.
 - `docs/models/forecaster-v2.md` documents the retired pooled monthly SARIMA research artifact.

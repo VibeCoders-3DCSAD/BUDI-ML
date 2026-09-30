@@ -6,7 +6,13 @@ import numpy as np
 
 from app.models.registry import ModuleModel
 from app.schemas.common import ModuleStatus
-from app.schemas.pfp import PFPClassification, PFPClassifyRequest
+from app.schemas.pfp import (
+    EmergencyRunway,
+    IncomePattern,
+    ObligationLoad,
+    PFPClassification,
+    PFPClassifyRequest,
+)
 from app.services.features import pfp_feature_vector
 
 _TIER_RE = re.compile(r"\btier(\d+)_")
@@ -81,14 +87,27 @@ def classify_questionnaire(request: PFPClassifyRequest) -> PFPClassification:
     Tier 0 fallback (no model inference) for cold-start users, per the
     PFP MDD: QUESTIONNAIRE mode is the system's cold-start answer.
     """
-    answers = request.payload.get("questionnaire_answers") or {}
-    variability = str(answers.get("income_variability", "")).lower()
-    obligation = str(answers.get("obligation_level", "")).lower()
-    runway = str(answers.get("emergency_runway", "")).lower()
+    answers = request.questionnaire_answers
+    if answers is None:
+        raise ValueError("questionnaire answers are required")
 
-    stability = 0.2 if "variable" in variability or "irregular" in variability else 0.8
-    weight = 0.8 if "high" in obligation else (0.4 if "medium" in obligation else 0.2)
-    tolerance = 0.2 if "low" in runway else (0.8 if "high" in runway or "3" in runway else 0.5)
+    stability = 0.2 if answers.income_pattern == IncomePattern.VARIABLE else 0.8
+    weight = (
+        0.8
+        if answers.obligation_load
+        in {ObligationLoad.HIGH, ObligationLoad.NO_INCOME_WITH_OBLIGATIONS}
+        else 0.4
+        if answers.obligation_load == ObligationLoad.MEDIUM
+        else 0.2
+    )
+    tolerance = (
+        0.2
+        if answers.emergency_runway == EmergencyRunway.LESS_THAN_ONE_MONTH
+        else 0.8
+        if answers.emergency_runway
+        in {EmergencyRunway.THREE_TO_SIX_MONTHS, EmergencyRunway.SIX_PLUS_MONTHS}
+        else 0.5
+    )
 
     label_parts = []
     label_parts.append("Variable" if stability < 0.5 else "Stable")

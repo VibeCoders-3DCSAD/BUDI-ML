@@ -1,8 +1,8 @@
 {
   "model_id": "hfce-sarima-v4-category-quarterly",
   "family": "hfce_sarima_v4",
-  "created_at": "2026-09-27T21:28:17Z",
-  "training_commit": "a39aab4",
+  "created_at": "2026-09-28T23:19:29Z",
+  "training_commit": "5f1a324",
   "training_data_hash": "ed99dc7d9fe7da2efe89eb79aa69a1f03b6eaf587a1b1825f3238a6e2570a6aa",
   "framework": "statsmodels",
   "framework_version": "0.15.0",
@@ -23,13 +23,13 @@
   ],
   "feature_columns": [],
   "metrics": {
-    "primary": {"name": "macro_test_mape_percent", "value": 5.223588128188048},
-    "secondary": {"macro_test_smape_percent": 5.113149086936706, "macro_test_mda_percent": 94.69696969696969}
+    "primary": {"name": "macro_test_mape_percent", "value": 5.770146303146874},
+    "secondary": {"macro_test_smape_percent": 5.524086321075855, "macro_test_mda_percent": 92.5}
   },
-  "decision_rule": "lowest validation MAPE candidate per HFCE category",
+  "decision_rule": "lowest expanding-window four-quarter validation sMAPE; ties resolve by MAE then mean AICc",
   "winner": "category_specific_sarima",
   "winner_artifact": null,
-  "winner_reason": "each of 12 HFCE categories selects its own lowest-MAPE SARIMA candidate",
+  "winner_reason": "each of 12 HFCE categories selects its own fixed-s=4 SARIMA order and target transform from the bounded grid",
   "winner_params": "recorded per category in evaluation.json",
   "threshold": null,
   "fitted": true,

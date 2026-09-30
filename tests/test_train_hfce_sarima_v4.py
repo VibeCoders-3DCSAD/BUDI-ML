@@ -11,19 +11,19 @@ from training.scripts.modeling.train_hfce_sarima_v4 import (
 )
 
 
-def test_split_series_uses_contiguous_70_20_10_quarterly_windows() -> None:
+def test_split_series_uses_fixed_covid_aware_and_post_covid_windows() -> None:
     series = pd.Series(range(106), index=pd.period_range("2000Q1", periods=106, freq="Q"))
 
     train, validation, test = split_series(series)
 
-    assert len(train) == 74
-    assert len(validation) == 21
-    assert len(test) == 11
+    assert len(train) == 88
+    assert len(validation) == 8
+    assert len(test) == 10
     assert str(train.index[0]) == "2000Q1"
-    assert str(train.index[-1]) == "2018Q2"
-    assert str(validation.index[0]) == "2018Q3"
-    assert str(validation.index[-1]) == "2023Q3"
-    assert str(test.index[0]) == "2023Q4"
+    assert str(train.index[-1]) == "2021Q4"
+    assert str(validation.index[0]) == "2022Q1"
+    assert str(validation.index[-1]) == "2023Q4"
+    assert str(test.index[0]) == "2024Q1"
     assert str(test.index[-1]) == "2026Q2"
 
 
@@ -71,8 +71,8 @@ def test_walk_forward_folds_expand_across_the_validation_window() -> None:
 
     folds = walk_forward_folds(train, validation)
 
-    assert [len(history) for history, _ in folds] == [74, 78, 82, 86, 90, 94]
-    assert [len(held_out) for _, held_out in folds] == [4, 4, 4, 4, 4, 1]
+    assert [len(history) for history, _ in folds] == [88, 92]
+    assert [len(held_out) for _, held_out in folds] == [4, 4]
 
 
 def test_candidates_require_intervention_sarimax_for_every_category() -> None:
@@ -83,3 +83,11 @@ def test_candidates_require_intervention_sarimax_for_every_category() -> None:
 
 def test_candidates_can_produce_a_baseline_sarima_comparison() -> None:
     assert {candidate["family"] for candidate in candidates("sarima")} == {"sarima"}
+
+
+def test_candidates_cover_the_declared_order_grid_without_double_differencing() -> None:
+    grid = candidates("sarima")
+
+    assert len(grid) == 864
+    assert all(not (candidate["order"][1] and candidate["seasonal_order"][1]) for candidate in grid)
+    assert {candidate["seasonal_order"][3] for candidate in grid} == {4}

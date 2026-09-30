@@ -17,6 +17,7 @@
 | Model training pipeline and phase docs | `training/` |
 | **Trusted path for teammates/agents to train & serve** | `docs/models/TEAMMATE-GUIDE.md` |
 | ML design documents (data collection, EDA, thresholds) | `training/docs/` |
+| Financial Classification V2 rule evaluation | `docs/models/classification-v2-evaluation.md` |
 | Engineering and documentation standards | `docs/standards/` |
 | Enforceable Python/ML code standards | `docs/standards/REPOSITORY-STANDARDS.md` |
 | Git commit message conventions | `docs/standards/git-commit-standards.md` |
