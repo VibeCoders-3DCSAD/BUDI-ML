@@ -62,12 +62,43 @@ def test_budget_recommend(client):
     rec = body["recommendation"]
     allocations = {a["category_id"]: a["amount"] for a in rec["allocations"]}
     total = sum(allocations.values())
-    assert abs(total - 25000.0) < 1.0
+    assert abs(total - 24750.0) < 1.0
+    assert rec["unallocated_surplus"] == 250.0
     assert allocations["essentials_rent"] == 8000.0  # FIXED
-    assert rec["utilization_rate"] > 0.99
+    assert rec["utilization_rate"] == 0.99
     assert rec["feasibility"] == "FEASIBLE"
     assert body["metadata"]["model_version"] == "budget-scipy_linprog"
     assert body["metadata"]["strategy_used"] == "tier2_lp"
+
+
+def test_budget_keeps_forecast_surplus_out_of_expense_categories(client):
+    payload = _budget_payload()
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 15_000.0,
+        "category_forecasts": [
+            {"category": "essentials_food", "amount": 7_000.0},
+            {"category": "essentials_rent", "amount": 8_000.0},
+            {"category": "discretionary_leisure", "amount": 0.0},
+            {"category": "savings", "amount": 0.0},
+        ],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    recommendation = response.json()["recommendation"]
+    allocations = {item["category_id"]: item["amount"] for item in recommendation["allocations"]}
+    assert allocations == {
+        "essentials_food": 7_000.0,
+        "essentials_rent": 8_000.0,
+        "discretionary_leisure": 0.0,
+        "savings": 0.0,
+    }
+    assert recommendation["unallocated_surplus"] == 10_000.0
 
 
 def test_budget_rejects_bad_restriction(client):

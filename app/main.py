@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,6 +8,11 @@ from fastapi import FastAPI
 from app.api import anomaly, budget, classification, forecast, health, pfp
 from app.core.config import SERVICE_VERSION
 from app.models.registry import ModelRegistry
+
+app_logger = logging.getLogger("app")
+app_logger.setLevel(logging.INFO)
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(name)s: %(message)s")
 
 
 @asynccontextmanager

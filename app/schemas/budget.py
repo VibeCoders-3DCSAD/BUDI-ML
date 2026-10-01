@@ -16,6 +16,11 @@ class RestrictionLevel(StrEnum):
     FLEXIBLE = "FLEXIBLE"
 
 
+class BudgetTargetType(StrEnum):
+    CATEGORY = "category"
+    SUBCATEGORY = "subcategory"
+
+
 class BudgetPeriod(BaseModel):
     start: str
     end: str
@@ -36,6 +41,7 @@ class BudgetPeriod(BaseModel):
 
 class BudgetCategory(BaseModel):
     category_id: str
+    target_type: BudgetTargetType = BudgetTargetType.SUBCATEGORY
     restriction_level: RestrictionLevel
     floor: float = Field(ge=0)
     ceiling: float = Field(ge=0)
@@ -82,6 +88,7 @@ class BudgetRecommendation(BaseModel):
     required_funds: float | None = Field(default=None, ge=0)
     available_funds: float | None = Field(default=None, gt=0)
     shortfall: float | None = Field(default=None, ge=0)
+    unallocated_surplus: float = Field(default=0, ge=0)
     conflicting_categories: list[str] = Field(default_factory=list)
 
 

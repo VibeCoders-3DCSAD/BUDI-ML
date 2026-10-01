@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date
+import logging
+from datetime import date, timedelta
 
 from app.models.registry import ModuleModel
 from app.services import forecast_service
@@ -18,7 +19,8 @@ class _StubHfceModel:
         return [120.0]
 
 
-def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month():
+def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(caplog):
+    caplog.set_level(logging.INFO, logger="app.services.forecast_service")
     model = ModuleModel(
         module="hfce_sarima_v4",
         model={
@@ -41,13 +43,23 @@ def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(
         {"date": "2026-10-02", "amount": 800.0, "category": "food", "transaction_type": "expense"},
     ]
 
-    points = forecast_service.forecast(model, transactions, ["food"], as_of=date(2026, 10, 7))
+    points = forecast_service.forecast(
+        model,
+        transactions,
+        ["food"],
+        as_of=date(2026, 10, 7),
+        user_id="test-user",
+    )
 
     assert [point.month for point in points] == ["2026-11"]
     assert points[0].quarter == "2026Q4"
     assert points[0].user_baseline_amount == 2_500.0
     assert points[0].hfce_multiplier == 1.2
     assert points[0].amount == 3_000.0
+    assert "completed_months=['2026-01'] monthly_amounts_php=[2500.0] recency_weights=[1]" in caplog.text
+    assert "weighted_total_php=2500.00 weight_total=1 baseline_php=2500.00" in caplog.text
+    assert "user_id=test-user category=food baseline_php=2500.00" in caplog.text
+    assert "hfce_multiplier=1.200000 trend_multiplier=1.000000 final_amount_php=3000.00" in caplog.text
 
 
 def test_forecast_excludes_partial_month_spend_from_its_baseline():
@@ -120,9 +132,10 @@ def test_predict_returns_personalized_hfce_category_forecast(client):
 
     assert response.status_code == 200
     point = response.json()["forecasts"][0]
+    target_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1)
     assert point["category"] == "food"
-    assert point["month"] == "2026-10"
-    assert point["quarter"] == "2026Q4"
+    assert point["month"] == target_month.strftime("%Y-%m")
+    assert point["quarter"] == f"{target_month.year}Q{((target_month.month - 1) // 3) + 1}"
     assert point["amount"] > 0
     assert point["user_baseline_amount"] == 1_266.67
     assert point["hfce_multiplier"] > 0

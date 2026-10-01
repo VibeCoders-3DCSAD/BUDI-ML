@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date
 
 import numpy as np
@@ -9,6 +10,8 @@ from statsmodels.tsa.holtwinters import Holt
 from app.models.registry import ModuleModel
 from app.schemas.forecast import ForecastPoint
 from app.services.features import transactions_to_frame
+
+logger = logging.getLogger(__name__)
 
 
 def _inverse_hfce_values(values: np.ndarray, transform: str) -> np.ndarray:
@@ -21,7 +24,7 @@ def _inverse_hfce_values(values: np.ndarray, transform: str) -> np.ndarray:
 
 def _monthly_baseline(
     expenses: pd.DataFrame, category: str, as_of: date
-) -> tuple[float, np.ndarray]:
+) -> tuple[float, np.ndarray, list[str]]:
     current_month = pd.Period(as_of, freq="M")
     completed = expenses.loc[
         expenses["date"].dt.to_period("M").lt(current_month)
@@ -33,7 +36,7 @@ def _monthly_baseline(
         raise ValueError(f"forecast requires a completed current-year {category} month")
     values = monthly.to_numpy(dtype="float64")
     weights = np.arange(1, len(values) + 1, dtype="float64")
-    return float(np.average(values, weights=weights)), values
+    return float(np.average(values, weights=weights)), values, [str(month) for month in monthly.index]
 
 
 def _monthly_weights(values: np.ndarray, baseline: float, horizon: int) -> np.ndarray:
@@ -52,7 +55,11 @@ def _monthly_weights(values: np.ndarray, baseline: float, horizon: int) -> np.nd
 
 
 def forecast(
-    model: ModuleModel, transactions: list[dict], categories: list[str], as_of: date | None = None
+    model: ModuleModel,
+    transactions: list[dict],
+    categories: list[str],
+    as_of: date | None = None,
+    user_id: str | None = None,
 ) -> list[ForecastPoint]:
     """Project each HFCE category for the next calendar month only."""
     as_of = as_of or date.today()
@@ -70,7 +77,24 @@ def forecast(
         artifact = model.model.get(category)
         if artifact is None:
             raise ValueError(f"forecast does not support category: {category}")
-        user_baseline, monthly_history = _monthly_baseline(expenses, category, as_of)
+        user_baseline, monthly_history, baseline_months = _monthly_baseline(
+            expenses, category, as_of
+        )
+        baseline_weights = np.arange(1, len(monthly_history) + 1, dtype="float64")
+        weighted_total = float(np.dot(monthly_history, baseline_weights))
+        logger.info(
+            "forecast baseline user_id=%s category=%s completed_months=%s "
+            "monthly_amounts_php=%s recency_weights=%s weighted_total_php=%.2f "
+            "weight_total=%.0f baseline_php=%.2f",
+            user_id,
+            category,
+            baseline_months,
+            [round(float(amount), 2) for amount in monthly_history],
+            [int(weight) for weight in baseline_weights],
+            weighted_total,
+            baseline_weights.sum(),
+            user_baseline,
+        )
 
         transform = artifact["transform"]
         national_history = _inverse_hfce_values(
@@ -88,12 +112,23 @@ def forecast(
         )
         multiplier = national_forecast / national_baseline
         trend_multiplier = _monthly_weights(monthly_history, user_baseline, 1)[0]
+        amount = user_baseline * multiplier * trend_multiplier
+        logger.info(
+            "forecast prediction user_id=%s category=%s baseline_php=%.2f "
+            "hfce_multiplier=%.6f trend_multiplier=%.6f final_amount_php=%.2f",
+            user_id,
+            category,
+            user_baseline,
+            multiplier,
+            trend_multiplier,
+            amount,
+        )
         points.append(
             ForecastPoint(
                 category=category,
                 month=str(target_month),
                 quarter=str(target_quarter),
-                amount=round(user_baseline * multiplier * trend_multiplier, 2),
+                amount=round(amount, 2),
                 user_baseline_amount=round(user_baseline, 2),
                 hfce_multiplier=round(multiplier, 6),
                 hfce_forecast_amount_million_php=round(national_forecast, 2),

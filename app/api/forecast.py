@@ -36,6 +36,7 @@ async def predict(
             registry.hfce_sarima,
             [transaction.model_dump() for transaction in request.historical_transactions],
             request.categories,
+            user_id=request.user_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

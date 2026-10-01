@@ -24,7 +24,7 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     target ratios (Deviation-from-User-Preferences KPI).
 
     Constraints:
-      - sum of allocations == available funds,
+        - sum of allocations <= available funds,
       - FIXED categories held at their configured amount,
       - MINIMUM categories keep their configured floor,
       - FLEXIBLE categories respect [floor, ceiling].
@@ -91,16 +91,13 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         ), []
     bounds: list[tuple[float, float | None]] = [*allocation_bounds]
     bounds.extend([(0.0, None)] * n)
-
-    A_eq = [[1.0 if j < n else 0.0 for j in range(2 * n)]]
-    b_eq = [funds]
+    A_ub.append([1.0 if j < n else 0.0 for j in range(2 * n)])
+    b_ub.append(funds)
 
     result = linprog(
         c=c,
         A_ub=A_ub,
         b_ub=b_ub,
-        A_eq=A_eq,
-        b_eq=b_eq,
         bounds=bounds,
         method="highs",
     )
@@ -112,6 +109,7 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
 
     allocations = np.maximum(result.x[:n], 0.0)
     utilization = float(allocations.sum()) / funds if funds > 0 else 0.0
+    unallocated_surplus = max(funds - float(allocations.sum()), 0.0)
 
     constraint_satisfaction = 1.0
     for i, cat in enumerate(categories):
@@ -133,6 +131,7 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         utilization_rate=round(utilization, 4),
         constraint_satisfaction=round(constraint_satisfaction, 4),
         feasibility=feasibility,
+        unallocated_surplus=round(unallocated_surplus, 2),
     )
 
     explanations = []
@@ -194,6 +193,7 @@ def _infeasible_recommendation(
         required_funds=round(constrained_total, 2),
         available_funds=round(funds, 2),
         shortfall=round(shortfall, 2),
+        unallocated_surplus=0.0,
         conflicting_categories=[
             category.category_id
             for category, (lower, upper) in zip(categories, bounds, strict=True)
