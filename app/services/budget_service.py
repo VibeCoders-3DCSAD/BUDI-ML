@@ -7,6 +7,7 @@ from app.schemas.budget import (
     BudgetAllocation,
     BudgetCategory,
     BudgetExplanation,
+    BudgetPriorityGroup,
     BudgetRecommendation,
     BudgetRequest,
     RestrictionLevel,
@@ -19,9 +20,9 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     """Solve one monthly Financial Plan allocation without relaxing user rules.
 
     Decision variables: allocation `x_i` plus deviation `d_i` per category,
-    where `d_i >= |x_i - target_i|`. The LP minimizes the weighted sum of
-    deviations, so recommendations stay as close as possible to the user's
-    target ratios (Deviation-from-User-Preferences KPI).
+    where `d_i >= |x_i - target_i|`. A first LP reserves available flexible
+    funds for Essential targets before Non-essential targets. A second LP
+    minimizes each tier's weighted deviations from its targets.
 
     Constraints:
         - sum of allocations <= available funds,
@@ -89,15 +90,33 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         return _infeasible_recommendation(
             categories, allocation_bounds, funds, maximum_available, "maximum_capacity"
         ), []
+
+    essential_total = _essential_target_total(categories, allocation_bounds, targets, funds)
     bounds: list[tuple[float, float | None]] = [*allocation_bounds]
     bounds.extend([(0.0, None)] * n)
     A_ub.append([1.0 if j < n else 0.0 for j in range(2 * n)])
     b_ub.append(funds)
+    essential_indices = [
+        index
+        for index, category in enumerate(categories)
+        if category.priority_group == BudgetPriorityGroup.ESSENTIAL
+    ]
+    if essential_indices:
+        equality = [0.0] * (2 * n)
+        for index in essential_indices:
+            equality[index] = 1.0
+        A_eq = [equality]
+        b_eq = [essential_total]
+    else:
+        A_eq = None
+        b_eq = None
 
     result = linprog(
         c=c,
         A_ub=A_ub,
         b_ub=b_ub,
+        A_eq=A_eq,
+        b_eq=b_eq,
         bounds=bounds,
         method="highs",
     )
@@ -171,6 +190,42 @@ def _forecast_targets(request: BudgetRequest) -> dict[str, float]:
     if request.forecast is None:
         return {}
     return {point.category: point.amount for point in request.forecast.category_forecasts}
+
+
+def _essential_target_total(
+    categories: list[BudgetCategory],
+    allocation_bounds: list[tuple[float, float]],
+    targets: np.ndarray,
+    funds: float,
+) -> float:
+    """Reserve Essential funds up to forecast targets after all hard floors."""
+    bounds = []
+    for category, (floor, ceiling), target in zip(
+        categories, allocation_bounds, targets, strict=True
+    ):
+        if category.priority_group == BudgetPriorityGroup.ESSENTIAL:
+            bounds.append((floor, min(ceiling, max(floor, float(target)))))
+        else:
+            bounds.append((floor, floor))
+    result = linprog(
+        c=[
+            -1.0 if category.priority_group == BudgetPriorityGroup.ESSENTIAL else 0.0
+            for category in categories
+        ],
+        A_ub=[[1.0] * len(categories)],
+        b_ub=[funds],
+        bounds=bounds,
+        method="highs",
+    )
+    if not result.success:
+        raise ValueError("essential allocation could not be optimized")
+    return float(
+        sum(
+            result.x[index]
+            for index, category in enumerate(categories)
+            if category.priority_group == BudgetPriorityGroup.ESSENTIAL
+        )
+    )
 
 
 def _infeasible_recommendation(

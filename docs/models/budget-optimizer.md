@@ -71,7 +71,8 @@ The user's *preferred* spending proportions — e.g., "I want 40% on food, 20% o
 The optimizer frames budget allocation as a **linear program** — a mathematical problem with:
 
 - **Decision variables**: One number per category (how much to allocate), plus one "deviation" variable per category (how far the allocation is from the target ratio).
-- **Objective**: Minimize the total weighted deviation from the user's target ratios. Categories with higher `priority_weight` get penalized more for missing their target.
+- **Priority hierarchy**: Essential categories receive available flexible funds up to their forecast targets before Non-essential categories. Fixed and Minimum amounts remain hard constraints for every category.
+- **Objective within each priority group**: Minimize the weighted deviation from the user's target ratios. Categories with higher `priority_weight` get penalized more for missing their target.
 - **Constraints** (the rules it must follow):
 
 | Constraint | Mathematical form | Plain meaning |

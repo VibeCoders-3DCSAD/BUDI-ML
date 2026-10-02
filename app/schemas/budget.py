@@ -21,6 +21,11 @@ class BudgetTargetType(StrEnum):
     SUBCATEGORY = "subcategory"
 
 
+class BudgetPriorityGroup(StrEnum):
+    ESSENTIAL = "ESSENTIAL"
+    NON_ESSENTIAL = "NON_ESSENTIAL"
+
+
 class BudgetPeriod(BaseModel):
     start: str
     end: str
@@ -42,6 +47,7 @@ class BudgetPeriod(BaseModel):
 class BudgetCategory(BaseModel):
     category_id: str
     target_type: BudgetTargetType = BudgetTargetType.SUBCATEGORY
+    priority_group: BudgetPriorityGroup
     restriction_level: RestrictionLevel
     floor: float = Field(ge=0)
     ceiling: float = Field(ge=0)

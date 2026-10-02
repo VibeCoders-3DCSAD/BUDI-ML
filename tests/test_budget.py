@@ -14,6 +14,7 @@ def _budget_payload():
         "categories": [
             {
                 "category_id": "essentials_food",
+                "priority_group": "ESSENTIAL",
                 "restriction_level": "MINIMUM",
                 "floor": 6000.0,
                 "ceiling": 9000.0,
@@ -22,6 +23,7 @@ def _budget_payload():
             },
             {
                 "category_id": "essentials_rent",
+                "priority_group": "ESSENTIAL",
                 "restriction_level": "FIXED",
                 "floor": 8000.0,
                 "ceiling": 8000.0,
@@ -30,6 +32,7 @@ def _budget_payload():
             },
             {
                 "category_id": "discretionary_leisure",
+                "priority_group": "NON_ESSENTIAL",
                 "restriction_level": "FLEXIBLE",
                 "floor": 0.0,
                 "ceiling": 5000.0,
@@ -38,6 +41,7 @@ def _budget_payload():
             },
             {
                 "category_id": "savings",
+                "priority_group": "NON_ESSENTIAL",
                 "restriction_level": "FLEXIBLE",
                 "floor": 0.0,
                 "ceiling": 6000.0,
@@ -99,6 +103,58 @@ def test_budget_keeps_forecast_surplus_out_of_expense_categories(client):
         "savings": 0.0,
     }
     assert recommendation["unallocated_surplus"] == 10_000.0
+
+
+def test_budget_allocates_essential_targets_before_non_essential_targets(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 10_000.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10_000.0,
+            "priority_weight": 0.8,
+        },
+        {
+            "category_id": "housing",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10_000.0,
+            "priority_weight": 0.2,
+        },
+        {
+            "category_id": "recreation",
+            "priority_group": "NON_ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10_000.0,
+            "priority_weight": 1.0,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 18_000.0,
+        "category_forecasts": [
+            {"category": "food", "amount": 8_000.0},
+            {"category": "housing", "amount": 6_000.0},
+            {"category": "recreation", "amount": 4_000.0},
+        ],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    allocations = {
+        allocation["category_id"]: allocation["amount"]
+        for allocation in response.json()["recommendation"]["allocations"]
+    }
+    assert allocations == {"food": 8_000.0, "housing": 2_000.0, "recreation": 0.0}
 
 
 def test_budget_rejects_bad_restriction(client):

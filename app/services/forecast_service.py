@@ -5,7 +5,6 @@ from datetime import date
 
 import numpy as np
 import pandas as pd
-from statsmodels.tsa.holtwinters import Holt
 
 from app.models.registry import ModuleModel
 from app.schemas.forecast import ForecastPoint
@@ -37,21 +36,6 @@ def _monthly_baseline(
     values = monthly.to_numpy(dtype="float64")
     weights = np.arange(1, len(values) + 1, dtype="float64")
     return float(np.average(values, weights=weights)), values, [str(month) for month in monthly.index]
-
-
-def _monthly_weights(values: np.ndarray, baseline: float, horizon: int) -> np.ndarray:
-    if len(values) == 1 or horizon == 0:
-        return np.ones(horizon, dtype="float64")
-    try:
-        predicted = np.asarray(
-            Holt(values, damped_trend=True, initialization_method="estimated")
-            .fit(optimized=True)
-            .forecast(horizon),
-            dtype="float64",
-        )
-    except ValueError, np.linalg.LinAlgError:
-        return np.ones(horizon, dtype="float64")
-    return np.maximum(predicted, 0.0) / baseline
 
 
 def forecast(
@@ -111,16 +95,14 @@ def forecast(
             ]
         )
         multiplier = national_forecast / national_baseline
-        trend_multiplier = _monthly_weights(monthly_history, user_baseline, 1)[0]
-        amount = user_baseline * multiplier * trend_multiplier
+        amount = user_baseline * multiplier
         logger.info(
             "forecast prediction user_id=%s category=%s baseline_php=%.2f "
-            "hfce_multiplier=%.6f trend_multiplier=%.6f final_amount_php=%.2f",
+            "hfce_multiplier=%.6f final_amount_php=%.2f",
             user_id,
             category,
             user_baseline,
             multiplier,
-            trend_multiplier,
             amount,
         )
         points.append(

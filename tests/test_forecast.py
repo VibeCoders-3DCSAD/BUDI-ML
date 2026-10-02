@@ -59,7 +59,7 @@ def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(
     assert "completed_months=['2026-01'] monthly_amounts_php=[2500.0] recency_weights=[1]" in caplog.text
     assert "weighted_total_php=2500.00 weight_total=1 baseline_php=2500.00" in caplog.text
     assert "user_id=test-user category=food baseline_php=2500.00" in caplog.text
-    assert "hfce_multiplier=1.200000 trend_multiplier=1.000000 final_amount_php=3000.00" in caplog.text
+    assert "hfce_multiplier=1.200000 final_amount_php=3000.00" in caplog.text
 
 
 def test_forecast_excludes_partial_month_spend_from_its_baseline():

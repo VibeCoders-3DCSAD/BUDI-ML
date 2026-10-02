@@ -35,12 +35,11 @@ For each requested category, the service:
 2. Calculates a recency-weighted average of the user's completed current-year monthly category totals.
 3. Gets the HFCE category projection for the quarter containing the next calendar month.
 4. Divides that projection by the median of the artifact's four latest observed HFCE values.
-5. Multiplies the user's baseline by that HFCE trend multiplier and a Holt extrapolation of their monthly history.
+5. Multiplies the user's baseline by that HFCE trend multiplier.
 
 ```text
 forecast_php = weighted_average(completed_user_category_months)
                * (next_hfce_quarter_forecast / recent_hfce_baseline)
-               * user_monthly_holt_multiplier
 ```
 
 The response reports the user's baseline, the HFCE multiplier, and the national
