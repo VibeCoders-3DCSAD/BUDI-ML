@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
+
 from tests.conftest import trusted_post
 
 
@@ -72,7 +74,7 @@ def test_budget_recommend(client):
     assert rec["utilization_rate"] == 0.99
     assert rec["feasibility"] == "FEASIBLE"
     assert body["metadata"]["model_version"] == "budget-scipy_linprog"
-    assert body["metadata"]["strategy_used"] == "tier2_lp"
+    assert body["metadata"]["strategy_used"] == "hierarchical_milp_v2"
 
 
 def test_budget_keeps_forecast_surplus_out_of_expense_categories(client):
@@ -105,7 +107,7 @@ def test_budget_keeps_forecast_surplus_out_of_expense_categories(client):
     assert recommendation["unallocated_surplus"] == 10_000.0
 
 
-def test_budget_allocates_essential_targets_before_non_essential_targets(client):
+def test_budget_allocates_scarce_funds_across_essential_targets_by_weight(client):
     payload = _budget_payload()
     payload["available_funds"] = 10_000.0
     payload["categories"] = [
@@ -155,6 +157,195 @@ def test_budget_allocates_essential_targets_before_non_essential_targets(client)
         for allocation in response.json()["recommendation"]["allocations"]
     }
     assert allocations == {"food": 8_000.0, "housing": 2_000.0, "recreation": 0.0}
+
+
+def test_budget_does_not_starve_lower_weight_essential(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 5_000.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10_000.0,
+            "priority_weight": 0.8,
+        },
+        {
+            "category_id": "housing",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10_000.0,
+            "priority_weight": 0.2,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 14_000.0,
+        "category_forecasts": [
+            {"category": "food", "amount": 8_000.0},
+            {"category": "housing", "amount": 6_000.0},
+        ],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    allocations = {
+        allocation["category_id"]: allocation["amount"]
+        for allocation in response.json()["recommendation"]["allocations"]
+    }
+    assert allocations == pytest.approx({"food": 4210.526315789473, "housing": 789.4736842105264})
+
+
+def test_budget_preserves_forecast_cap_centavos(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 10_005.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 20_000.0,
+            "priority_weight": 1.0,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 8_005.99,
+        "category_forecasts": [{"category": "food", "amount": 8_005.99}],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    recommendation = response.json()["recommendation"]
+    assert recommendation["allocations"] == [{"category_id": "food", "amount": 8_005.99}]
+    assert recommendation["unallocated_surplus"] == 1_999.01
+
+
+def test_budget_keeps_whole_peso_forecast_caps(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 3_000.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 2_000.0,
+            "priority_weight": 1.0,
+        },
+        {
+            "category_id": "housing",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 2_000.0,
+            "priority_weight": 1.0,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 2_170.0,
+        "category_forecasts": [
+            {"category": "food", "amount": 1_083.0},
+            {"category": "housing", "amount": 1_087.0},
+        ],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    allocations = {
+        allocation["category_id"]: allocation["amount"]
+        for allocation in response.json()["recommendation"]["allocations"]
+    }
+    assert allocations == {"food": 1_083.0, "housing": 1_087.0}
+
+
+def test_budget_preserves_forecast_cap_centavos_across_categories(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 6_000.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 5_000.0,
+            "priority_weight": 1.0,
+        },
+        {
+            "category_id": "housing",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 1_000.0,
+            "priority_weight": 1.0,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 5_100.67,
+        "category_forecasts": [
+            {"category": "food", "amount": 4_460.57},
+            {"category": "housing", "amount": 640.10},
+        ],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    allocations = {
+        allocation["category_id"]: allocation["amount"]
+        for allocation in response.json()["recommendation"]["allocations"]
+    }
+    assert allocations == {"food": 4_460.57, "housing": 640.1}
+
+
+def test_budget_preserves_half_peso_forecast_caps(client):
+    payload = _budget_payload()
+    payload["available_funds"] = 10.0
+    payload["categories"] = [
+        {
+            "category_id": "food",
+            "priority_group": "ESSENTIAL",
+            "restriction_level": "FLEXIBLE",
+            "floor": 0.0,
+            "ceiling": 10.0,
+            "priority_weight": 1.0,
+        },
+    ]
+    payload["forecast"] = {
+        "month": "2024-01",
+        "total_amount": 1.5,
+        "category_forecasts": [{"category": "food", "amount": 1.5}],
+        "model_version": "hfce-sarima-v4",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "quality": "PERSONALIZED",
+    }
+
+    response = trusted_post(client, "/api/v1/budget/recommend", payload)
+
+    assert response.status_code == 200
+    assert response.json()["recommendation"]["allocations"] == [
+        {"category_id": "food", "amount": 1.5}
+    ]
 
 
 def test_budget_rejects_bad_restriction(client):

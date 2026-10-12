@@ -15,6 +15,7 @@ Python microservice for machine learning APIs and inference, plus the complete m
 | `training/synth/` | Generated personas and transactions (Parquet, gitignored) |
 | `training/models/` | Intermediate model checkpoints (joblib, gitignored) |
 | `docs/models/` | RRL-grounded model candidate roster + model-lifecycle guidance |
+| `docs/services/` | Versioned service documentation for classification, IQR, recommend, and forecast |
 | `training/figures/` | EDA plots and analysis outputs (gitignored) |
 | `synth_v2/` | Optional Synthetic Generation v2 outputs (Parquet, gitignored) — parallel to `training/synth/`, see below |
 
@@ -158,7 +159,7 @@ python -m training.scripts.pipeline.survey_pipeline_v3 \
 V3 monthly targets are synthetic allocations, not observed household histories. Its
 evaluation cannot release or replace the served forecaster without external validation and
 an explicit artifact-release decision. See
-`training/docs/data-collection/survey-only-forecast-v3.md` and `docs/models/forecaster-v3.md`.
+`training/docs/data-collection/survey-only-forecast-v3.md` and `docs/services/forecast/v3/methodology.md`.
 
 ## Tech Stack
 

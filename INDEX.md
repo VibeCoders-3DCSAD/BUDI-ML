@@ -2,7 +2,7 @@
 
 - **Project:** Development of BUDI: A Personalized Intelligent Finance Management Application for Filipinos Using Classification, Forecasting, Optimization, and Anomaly Detection Models for Improving Savings and Debt
 - **Institution:** University of Makati | Group 4, III-DCSAD
-- **Last indexed:** 2026-09-27
+- **Last indexed:** 2026-10-09
 
 ---
 
@@ -11,13 +11,14 @@
 | Need | Go to |
 | :--- | :--- |
 | Project overview, setup, and usage | `README.md` |
-| Pen-and-paper algorithms (PFP, forecast v2, IQR, LP) | `training/docs/pen-and-paper-algorithms.md` |
+| Pen-and-paper algorithms (PFP, forecast v2, IQR, MILP) | `training/docs/pen-and-paper-algorithms.md` |
 | FastAPI service code (endpoints, models, schemas) | `app/` |
 | Run the test suite | `tests/` (run `pytest`) |
 | Model training pipeline and phase docs | `training/` |
 | **Trusted path for teammates/agents to train & serve** | `docs/models/TEAMMATE-GUIDE.md` |
+| Service documentation by module and version | `docs/services/README.md` |
 | ML design documents (data collection, EDA, thresholds) | `training/docs/` |
-| Financial Classification V2 rule evaluation | `docs/models/classification-v2-evaluation.md` |
+| Financial Classification V2 rule evaluation | `docs/services/classification/v2/evaluation.md` |
 | Engineering and documentation standards | `docs/standards/` |
 | Enforceable Python/ML code standards | `docs/standards/REPOSITORY-STANDARDS.md` |
 | Git commit message conventions | `docs/standards/git-commit-standards.md` |
@@ -84,7 +85,7 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | :--- | :--- |
 | `training/scripts/{data,pipeline,modeling,analysis,shared}/` | Data preparation, pipeline, modeling, analysis, and shared-script modules. |
 | `training/docs/` | ML design documents (data collection, EDA, dimension discovery). |
-| `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, budget LP. |
+| `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, Financial Planning Management MILP. |
 | `training/docs/pen-and-paper-simulation.md` | End-to-end pipeline simulation from a FIES row through one persona. |
 | `training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md` | FIES-anchored, HFCE-calibrated temporal disaggregation methodology. |
 | `training/docs/data-collection/synthetic-generation-v2.md` | Synthetic Generation v2 operator runbook (parallel pipeline; v1 untouched). |
@@ -102,13 +103,17 @@ The model development pipeline. Large generated artifacts are gitignored; script
 
 | Path | Purpose |
 | :--- | :--- |
-| `docs/README.md` | Clarifies the split between `docs/standards/`, `docs/models/`, and `training/docs/`. |
+| `docs/README.md` | Clarifies the split between standards, model, service, and training documentation. |
+| `docs/services/README.md` | Versioned service documentation for classification, IQR, recommend, and forecast. |
 | `docs/models/TEAMMATE-GUIDE.md` | Trusted path for human teammates and AI agents: scope, runbooks, verification. |
-| `docs/models/forecaster.md` | Plain-language serving explanation; v1 evaluation figures. |
-| `docs/models/forecaster-v2.md` | HFCE-calibrated v2 training note: empirical backing, SARIMA vs ARIMA, 2026-09-17 metrics. |
-| `docs/models/forecaster-v3.md` | Unserved survey-only v3 forecast pipeline and external-validation release gate. |
-| `docs/models/anomaly-alerts-v2.md` | Served V2 personal transaction-IQR anomaly rule and evaluation-only corpus contract. |
-| `docs/models/classification-v2.md` | Deterministic financial classification rules, service contract, input sources, and literature provenance. |
+| `docs/services/forecast/v1/overview.md` | Plain-language serving explanation; v1 evaluation figures. |
+| `docs/services/forecast/v2/methodology.md` | HFCE-calibrated v2 training note: empirical backing, SARIMA vs ARIMA, 2026-09-17 metrics. |
+| `docs/services/forecast/v3/methodology.md` | Unserved survey-only v3 forecast pipeline and external-validation release gate. |
+| `docs/services/iqr/v2/methodology.md` | Served V2 personal transaction-IQR anomaly rule and evaluation-only corpus contract. |
+| `docs/services/classification/v2/specification.md` | Deterministic financial classification rules, service contract, input sources, and literature provenance. |
+| `docs/services/recommend/v3/financial-plan-integration.md` | Current Financial Plan classification and optional-surplus integration contract. |
+| `docs/services/recommend/v4/methodology.md` | Financial Planning Management MILP formulation and serving contract. |
+| `docs/services/recommend/v2/optimizer.md` | Historical budget-recommendation optimizer constraints and allocation strategy. |
 | `docs/models/model-candidate-roster.md` | RRL-grounded candidate algorithms per model family. |
 | `docs/standards/REPOSITORY-STANDARDS.md` | Enforceable Python/ML engineering standards. |
 | `docs/standards/git-commit-standards.md` | Git commit message format and scopes. |

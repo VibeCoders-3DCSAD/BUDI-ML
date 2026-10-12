@@ -290,7 +290,7 @@ The PSA HFCE source is aggregate Philippine expenditure. Its within-year proport
 
 ---
 
-## 5. Train Quarterly SARIMA Candidates
+## 5. Train Quarterly HFCE Forecast Candidates
 
 Run the category-wise trainer:
 
@@ -298,19 +298,19 @@ Run the category-wise trainer:
 uv run python training/scripts/modeling/train_hfce_sarima_v4.py
 ```
 
-The trainer uses `current_price_million_php` and fits one model per category. It keeps the series in chronological order and uses an annual quarterly seasonal period of `s=4`.
+The trainer uses `current_price_million_php` and selects one model per category. It keeps the series in chronological order and uses an annual quarterly seasonal period of `s=4`.
 
 The 106 observed quarters from `2000-Q1` through `2026-Q2` are split without shuffling:
 
 | Partition | Rows | Period |
 | :--- | :---: | :--- |
-| Train | 74 | `2000-Q1` through `2018-Q2` |
-| Validation | 21 | `2018-Q3` through `2023-Q3` |
-| Test | 11 | `2023-Q4` through `2026-Q2` |
+| Initial training | 68 | `2000-Q1` through `2016-Q4` |
+| Rolling validation | 28 | `2017-Q1` through `2023-Q4` |
+| Final test | 10 | `2024-Q1` through `2026-Q2` |
 
-The test partition includes the published 2026 Q1 and Q2 observations. Candidate selection uses expanding-window walk-forward validation over the 21-quarter validation window: five four-quarter forecast folds and one final one-quarter fold. Every validation and test forecast reports MAE, RMSE, MAPE, SMAPE, and MDA. MDA compares each forecasted quarter's direction with the direction from the preceding observed quarter.
+The test partition includes the published 2026 Q1 and Q2 observations and is not used for candidate selection. Candidate selection uses expanding-window rolling-origin validation at every validation quarter. Each origin forecasts up to four quarters without inserting future observations into the path. The final test uses a locked winner and one-quarter-ahead expanding forecasts. Validation and test reports include MAE, SMAPE, MDA, and RMSE; MDA compares each forecasted quarter with its preceding observed quarter.
 
-The selected default is baseline SARIMA with no COVID intervention variables. COVID observations remain in the series and are not removed. SARIMAX with a temporary `covid` shock from `2020-Q1` through `2021-Q4` and a persistent `post_covid` level shift from `2022-Q1` onward remains available through `--model-family sarimax_intervention` for documented comparison experiments. These boundaries are command-line configuration and are recorded in `evaluation.json` whenever SARIMAX is run. Raw and `log1p` target transformations are compared for each selected family; forecasts are transformed back to current-price PHP before metrics are calculated. The selected candidate is refit on train plus validation for test evaluation, then refit on all available observations for its saved artifact. A candidate that does not converge during validation, test refit, or final refit is rejected; the next-best converged validation candidate is used instead.
+The candidate set contains seasonal naive, ETS, and SARIMA models. SARIMA searches all combinations of `p,q=0..3`, `d=0..1`, `P,Q=0..2`, and `D=0..1`, excluding candidates where both `d=1` and `D=1`. This produces 432 SARIMA order combinations, each evaluated with raw and `log1p` targets, for at most 864 SARIMA candidates per category. Forecasts from transformed models are inverse-transformed to current-price PHP before evaluation. COVID observations remain in the series without intervention variables. Candidates that fail estimation or produce non-finite or negative forecasts are rejected. Categories select the lowest validation MAE, with SMAPE, RMSE, and MDA as ordered tie-breakers. The locked winner is refit through `2023-Q4` for its sole final test, then refit on all available observations for its saved artifact.
 
 Generated training artifacts are written to:
 
@@ -318,7 +318,7 @@ Generated training artifacts are written to:
 training/models/hfce_sarima_v4/
 ```
 
-The directory contains one `.joblib` artifact per category and `evaluation.json` with input fingerprint, split dates, candidate validation results, selected orders, and held-out test metrics. `metric_averages` reports unweighted macro averages across the 12 selected category models for both validation and test metrics. These are training artifacts, not deployed serving artifacts.
+The directory contains one `.joblib` artifact per category and `evaluation.json` with input fingerprint, split dates, candidate validation results, selected specifications, and held-out test metrics. `metric_averages` reports only the scale-independent macro SMAPE and MDA across selected categories. These are training artifacts, not deployed serving artifacts.
 
 ---
 

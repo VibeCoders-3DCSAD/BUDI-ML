@@ -19,6 +19,21 @@ class _StubHfceModel:
         return [120.0]
 
 
+def test_forecast_rounds_final_amounts_half_up_to_whole_pesos():
+    assert [
+        forecast_service._round_to_whole_peso(amount) for amount in [1.2, 1.4, 1.5, 1.7, 4_460.57]
+    ] == [1.0, 1.0, 2.0, 2.0, 4_461.0]
+
+
+def test_seasonal_naive_hfce_artifact_forecasts_recursively():
+    history, forecast = forecast_service._hfce_history_and_forecast(
+        {"family": "seasonal_naive", "model": [100.0, 110.0, 90.0, 120.0]}, 5
+    )
+
+    assert history.tolist() == [100.0, 110.0, 90.0, 120.0]
+    assert forecast == 100.0
+
+
 def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(caplog):
     caplog.set_level(logging.INFO, logger="app.services.forecast_service")
     model = ModuleModel(
@@ -56,7 +71,10 @@ def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(
     assert points[0].user_baseline_amount == 2_500.0
     assert points[0].hfce_multiplier == 1.2
     assert points[0].amount == 3_000.0
-    assert "completed_months=['2026-01'] monthly_amounts_php=[2500.0] recency_weights=[1]" in caplog.text
+    assert (
+        "completed_months=['2026-01'] monthly_amounts_php=[2500.0] recency_weights=[1]"
+        in caplog.text
+    )
     assert "weighted_total_php=2500.00 weight_total=1 baseline_php=2500.00" in caplog.text
     assert "user_id=test-user category=food baseline_php=2500.00" in caplog.text
     assert "hfce_multiplier=1.200000 final_amount_php=3000.00" in caplog.text

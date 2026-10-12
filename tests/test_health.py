@@ -18,9 +18,9 @@ def test_metrics(client):
     assert resp.status_code == 200
     body = resp.json()
     assert "modules" in body
-    assert {"pfp", "forecaster", "anomaly", "budget"} <= set(body["modules"])
+    assert {"pfp", "forecaster", "budget"} <= set(body["modules"])
     assert body["modules"]["pfp"]["model_version"] == "pfp-tier3_svm"
     assert isinstance(body["modules"]["forecaster"]["model_version"], str)
-    assert body["modules"]["anomaly"]["ruleset_version"] == "personal-transaction-iqr-v2.3.0"
+    assert "anomaly" not in body["modules"]
     assert body["modules"]["budget"]["model_version"] == "budget-scipy_linprog"
     assert "timestamp" in body["modules"]["pfp"]

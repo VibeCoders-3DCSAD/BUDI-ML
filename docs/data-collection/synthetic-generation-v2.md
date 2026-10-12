@@ -186,7 +186,7 @@ python training/scripts/train_forecaster.py \
 forbids changing their *defaults*, but every script accepts explicit paths.)
 
 The 2026-09-17 walk-forward run on this path is documented in
-[`docs/models/forecaster-v2.md`](../../../docs/models/forecaster-v2.md)
+[`docs/services/forecast/v2/methodology.md`](../../../docs/services/forecast/v2/methodology.md)
 (empirical backing, 24-month SARIMA gate, metrics, and non-claims versus v1).
 
 ---

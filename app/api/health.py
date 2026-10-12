@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_registry
 from app.core.config import SERVICE_NAME, SERVICE_VERSION
 from app.models.registry import ModelRegistry
-from app.services.anomaly_service import RULESET_VERSION
 
 router = APIRouter(tags=["health"])
 
@@ -42,9 +41,6 @@ async def metrics(registry: ModelRegistry = Depends(get_registry)) -> dict:
     return {
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
-        "modules": {
-            **modules,
-            "anomaly": {"ruleset_version": RULESET_VERSION, "strategy": "personal_subcategory_iqr"},
-        },
+        "modules": modules,
         "check_latency_ms": round((time.perf_counter() - start) * 1000, 2),
     }

@@ -1,8 +1,8 @@
-# Anomaly Detector — Plain-Language Explanation
+# IQR Anomaly Detector V1 — Plain-Language Explanation
 
 > **Historical V1 document:** The trained global-artifact detector described below is not served.
 > The service now uses the V2 personal transaction-IQR rule in
-> [`anomaly-alerts-v2.md`](anomaly-alerts-v2.md). This document remains as an experiment record.
+> [`IQR Anomaly Alerts V2`](../v2/methodology.md). This document remains as an experiment record.
 
 > **What it does:** Watches each incoming transaction and flags the ones that look unusual compared to the user's normal spending behavior.
 

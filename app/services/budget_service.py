@@ -19,10 +19,10 @@ EPS = 1e-9
 def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetExplanation]]:
     """Solve one monthly Financial Plan allocation without relaxing user rules.
 
-    Decision variables: allocation `x_i` plus deviation `d_i` per category,
-    where `d_i >= |x_i - target_i|`. A first LP reserves available flexible
-    funds for Essential targets before Non-essential targets. A second LP
-    minimizes each tier's weighted deviations from its targets.
+    Forecast targets cap allocations. A first mixed-integer program maximizes
+    weighted Essential coverage so a lower-weight Essential is not starved. A
+    second program preserves that coverage, funds Essentials before Non-essentials,
+    then uses category weights to get as close to forecast caps as possible.
 
     Constraints:
         - sum of allocations <= available funds,
@@ -36,7 +36,8 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     """
     categories = request.categories
     n = len(categories)
-    funds = request.available_funds
+    available_funds = request.available_funds
+    funds = available_funds
 
     forecast_targets = _forecast_targets(request)
     target_ratios = request.target_ratios or {}
@@ -57,67 +58,47 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
             raise ValueError(
                 f"category {cat.category_id}: fixed amount requires equal floor and ceiling"
             )
-
-    # Objective: minimize sum(w_i * d_i)  -> c = [0]*n allocations, [w] deviations
-    c = np.concatenate([np.zeros(n), weights])
-
-    # Inequality constraints A_ub @ [x, d] <= b_ub:
-    #   x_i - d_i <= target_i   (under-shoot)
-    #   -x_i - d_i <= -target_i (over-shoot)
-    A_ub, b_ub = [], []
-    for i in range(n):
-        row_lo = [0.0] * (2 * n)
-        row_lo[i] = 1.0
-        row_lo[n + i] = -1.0
-        A_ub.append(row_lo)
-        b_ub.append(targets[i])
-
-        row_hi = [0.0] * (2 * n)
-        row_hi[i] = -1.0
-        row_hi[n + i] = -1.0
-        A_ub.append(row_hi)
-        b_ub.append(-targets[i])
-
-    # current_spend remains reporting context; user rules define plan bounds.
-    allocation_bounds = [_allocation_bounds(category) for category in categories]
+    # Forecast targets cap discretionary allocation. A configured hard floor
+    # remains authoritative when it is higher than the forecast.
+    allocation_bounds = [
+        _allocation_bounds(category, targets[index]) for index, category in enumerate(categories)
+    ]
     minimum_required = sum(bound[0] for bound in allocation_bounds)
-    maximum_available = sum(bound[1] for bound in allocation_bounds)
     if minimum_required > funds + EPS:
         return _infeasible_recommendation(
             categories, allocation_bounds, funds, minimum_required, "minimum_required"
         ), []
-    if maximum_available < funds - EPS:
-        return _infeasible_recommendation(
-            categories, allocation_bounds, funds, maximum_available, "maximum_capacity"
-        ), []
 
-    essential_total = _essential_target_total(categories, allocation_bounds, targets, funds)
-    bounds: list[tuple[float, float | None]] = [*allocation_bounds]
-    bounds.extend([(0.0, None)] * n)
-    A_ub.append([1.0 if j < n else 0.0 for j in range(2 * n)])
-    b_ub.append(funds)
-    essential_indices = [
-        index
-        for index, category in enumerate(categories)
+    essential_floors = _weighted_essential_coverage_floors(categories, allocation_bounds, funds)
+    allocation_bounds = [
+        (max(floor, essential_floors[index]), ceiling)
         if category.priority_group == BudgetPriorityGroup.ESSENTIAL
+        else (floor, ceiling)
+        for index, (category, (floor, ceiling)) in enumerate(
+            zip(categories, allocation_bounds, strict=True)
+        )
     ]
-    if essential_indices:
-        equality = [0.0] * (2 * n)
-        for index in essential_indices:
-            equality[index] = 1.0
-        A_eq = [equality]
-        b_eq = [essential_total]
-    else:
-        A_eq = None
-        b_eq = None
-
+    maximum_weighted_allocation = sum(
+        weight * ceiling
+        for weight, (_floor_amount, ceiling) in zip(weights, allocation_bounds, strict=True)
+    )
+    essential_priority = maximum_weighted_allocation + 1.0
+    objective = np.array(
+        [
+            -weight
+            - (
+                essential_priority
+                if category.priority_group == BudgetPriorityGroup.ESSENTIAL
+                else 0.0
+            )
+            for category, weight in zip(categories, weights, strict=True)
+        ]
+    )
     result = linprog(
-        c=c,
-        A_ub=A_ub,
-        b_ub=b_ub,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        bounds=bounds,
+        c=objective,
+        A_ub=[[1.0] * n],
+        b_ub=[funds],
+        bounds=allocation_bounds,
         method="highs",
     )
 
@@ -127,8 +108,8 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         ), []
 
     allocations = np.maximum(result.x[:n], 0.0)
-    utilization = float(allocations.sum()) / funds if funds > 0 else 0.0
-    unallocated_surplus = max(funds - float(allocations.sum()), 0.0)
+    utilization = float(allocations.sum()) / available_funds if available_funds > 0 else 0.0
+    unallocated_surplus = max(available_funds - float(allocations.sum()), 0.0)
 
     constraint_satisfaction = 1.0
     for i, cat in enumerate(categories):
@@ -140,11 +121,10 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
         if allocations[i] < cat.floor - EPS or allocations[i] > cat.ceiling + EPS:
             constraint_satisfaction = 0.0
 
-    # A successful equality-constrained LP is fully utilized by definition.
     feasibility = "INFEASIBLE" if constraint_satisfaction < 0.99 else "FEASIBLE"
     recommendation = BudgetRecommendation(
         allocations=[
-            BudgetAllocation(category_id=cat.category_id, amount=round(float(a), 2))
+            BudgetAllocation(category_id=cat.category_id, amount=float(a))
             for cat, a in zip(categories, allocations, strict=True)
         ],
         utilization_rate=round(utilization, 4),
@@ -180,10 +160,14 @@ def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetE
     return recommendation, explanations
 
 
-def _allocation_bounds(category: BudgetCategory) -> tuple[float, float]:
+def _allocation_bounds(category: BudgetCategory, target: float) -> tuple[float, float]:
     if category.restriction_level == RestrictionLevel.FIXED:
         return (category.floor, category.floor)
-    return (category.floor, category.ceiling)
+    minimum = category.floor
+    configured_cap = category.ceiling
+    if configured_cap < minimum:
+        raise ValueError(f"category {category.category_id}: ceiling cannot satisfy the minimum")
+    return (minimum, max(minimum, min(configured_cap, target)))
 
 
 def _forecast_targets(request: BudgetRequest) -> dict[str, float]:
@@ -192,40 +176,48 @@ def _forecast_targets(request: BudgetRequest) -> dict[str, float]:
     return {point.category: point.amount for point in request.forecast.category_forecasts}
 
 
-def _essential_target_total(
+def _weighted_essential_coverage_floors(
     categories: list[BudgetCategory],
     allocation_bounds: list[tuple[float, float]],
-    targets: np.ndarray,
     funds: float,
-) -> float:
-    """Reserve Essential funds up to forecast targets after all hard floors."""
-    bounds = []
-    for category, (floor, ceiling), target in zip(
-        categories, allocation_bounds, targets, strict=True
-    ):
-        if category.priority_group == BudgetPriorityGroup.ESSENTIAL:
-            bounds.append((floor, min(ceiling, max(floor, float(target)))))
-        else:
-            bounds.append((floor, floor))
+) -> list[float]:
+    """Maximize a common weighted Essential coverage level with an LP."""
+    floors = [floor for floor, _ceiling in allocation_bounds]
+    ceilings = [ceiling for _floor, ceiling in allocation_bounds]
+    weighted_gaps = {
+        index: (ceilings[index] - floors[index]) * max(categories[index].priority_weight, EPS)
+        for index, category in enumerate(categories)
+        if category.priority_group == BudgetPriorityGroup.ESSENTIAL
+        and ceilings[index] > floors[index] + EPS
+    }
+    if not weighted_gaps:
+        return floors
+
+    # Variables are allocations x_i and coverage level z. Each Essential must
+    # receive floor_i + z * weighted_gap_i before Stage 2 may optimize targets.
+    n = len(categories)
+    objective = [0.0] * n + [-1.0]
+    budget_constraint = [1.0] * n + [0.0]
+    coverage_constraints = []
+    coverage_limits = []
+    for index, weighted_gap in weighted_gaps.items():
+        constraint = [0.0] * (n + 1)
+        constraint[index] = -1.0
+        constraint[-1] = weighted_gap
+        coverage_constraints.append(constraint)
+        coverage_limits.append(-floors[index])
+
     result = linprog(
-        c=[
-            -1.0 if category.priority_group == BudgetPriorityGroup.ESSENTIAL else 0.0
-            for category in categories
-        ],
-        A_ub=[[1.0] * len(categories)],
-        b_ub=[funds],
-        bounds=bounds,
+        c=objective,
+        A_ub=[budget_constraint, *coverage_constraints],
+        b_ub=[funds, *coverage_limits],
+        bounds=[*allocation_bounds, (0.0, None)],
         method="highs",
     )
     if not result.success:
-        raise ValueError("essential allocation could not be optimized")
-    return float(
-        sum(
-            result.x[index]
-            for index, category in enumerate(categories)
-            if category.priority_group == BudgetPriorityGroup.ESSENTIAL
-        )
-    )
+        raise ValueError("essential coverage could not be optimized")
+
+    return list(result.x[:-1])
 
 
 def _infeasible_recommendation(

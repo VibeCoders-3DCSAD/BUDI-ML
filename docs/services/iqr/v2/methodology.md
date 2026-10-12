@@ -1,21 +1,21 @@
-# Anomaly Alerts V2 Methodology
+# Unusual Spending Alerts V2 — IQR Methodology
 
 ```json
 {
   "document-type": "system-spec",
-  "version": "2.2.0",
-  "date": "2026.09.23",
+  "version": "2.3.0",
+  "date": "2026.10.11",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
 
-> **Purpose:** This specification defines the proposed V2 methodology for detecting statistically unusual expense transactions from each user's own prior history. It does not use a trained anomaly-classification model, a forecast-residual detector, a global anomaly baseline, synthetic transactions, or another user's financial data for production anomaly decisions.
+> **Purpose:** This specification defines the final V2 methodology for detecting statistically unusual expense transactions from each user's own prior history. The production algorithm is the personalized transaction-level IQR rule. It does not use a trained anomaly-classification model, a forecast-residual detector, a global anomaly baseline, synthetic transactions, or another user's financial data for production anomaly decisions.
 
 ---
 
 ## Methodology Overview
 
-V2 uses a Personalized Transaction-Level IQR Detector:
+V2 uses a Personalized Transaction-Level IQR Detector as its final production algorithm:
 
 ```text
 Earlier expense transactions for one user and category
@@ -282,6 +282,8 @@ The following decisions require empirical validation before production use:
 **Personalized Expenditure Anomaly Detection using Transaction-Level IQR**
 
 This methodology identifies individual transaction deviations using only each user's chronologically earlier expense transactions in the same category, while preserving the distinction between anomaly-evaluation data and actual production user history.
+
+The IQR decision rule is deterministic: the same eligible transaction history and candidate transaction always produce the same result. It is a statistical outlier detector, not a trained machine-learning model.
 
 ---
 

@@ -12,7 +12,7 @@ The final model for each purpose uses a quarterly seasonal period of `s=4`. COVI
 | Expanding validation | `2022-Q1` to `2023-Q4` | Two sequential four-quarter forecast folds select each category's model. |
 | Untouched test | `2024-Q1` to `2026-Q2` | Evaluates the selected model under post-COVID conditions. |
 
-Each category searches all valid combinations of `p,q=0..3`, `d=0..1`, `P,Q=0..2`, and `D=0..1`, with `s=4`. Models with both `d=1` and `D=1` are excluded to avoid double differencing. The search compares raw and `log1p` targets, yielding 864 candidates per category. Candidates that do not converge or produce non-finite forecasts are rejected. The winner has the lowest rolling four-quarter sMAPE; MAE and mean AICc resolve ties.
+Each category searches all valid combinations of `p,q=0..3`, `d=0..1`, `P,Q=0..2`, and `D=0..1`, with `s=4`. Models with both `d=1` and `D=1` are excluded to avoid double differencing. The search compares raw and `log1p` targets, yielding 864 candidates per category. Candidates that do not converge or produce non-finite forecasts are rejected. The winner has the lowest rolling four-quarter sMAPE; MAE, RMSE, and MDA resolve ties.
 
 ## Selected Models
 
@@ -41,7 +41,7 @@ Each category searches all valid combinations of `p,q=0..3`, `d=0..1`, `P,Q=0..2
 | MAE | PHP 28,032.68 million |
 | RMSE | PHP 32,727.09 million |
 
-The held-out period is `2024-Q1` through `2026-Q2`. See `evaluation.json` for the full search contract, top-ten validation leaderboards, selected specifications, residual diagnostics, and test metrics.
+The held-out period is `2024-Q1` through `2026-Q2`. See `evaluation.json` for the full search contract, top-ten validation leaderboards, selected specifications, and test metrics.
 
 ## Serving Boundary
 

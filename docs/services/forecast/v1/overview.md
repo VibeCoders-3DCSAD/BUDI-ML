@@ -1,4 +1,4 @@
-# Spending Forecaster
+# Spending Forecaster V1
 
 > **What it does:** Projects a user's next-month category spend from their
 > completed category history and the national HFCE category trend.
@@ -59,4 +59,4 @@ HFCE forecast amount so the result remains explainable.
 - `models/hfce_sarima_v4/` contains one quarterly SARIMA artifact per supported category.
 - `models/hfce_sarima_v4/evaluation_report.md` records the category-specific model selection, chronological validation design, and held-out results.
 - `training/scripts/modeling/train_hfce_sarima_v4.py` trains and evaluates those artifacts using the reproducible quarterly search.
-- `docs/models/forecaster-v2.md` documents the retired pooled monthly SARIMA research artifact.
+- `docs/services/forecast/v2/methodology.md` documents the retired pooled monthly SARIMA research artifact.

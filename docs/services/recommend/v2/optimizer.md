@@ -1,4 +1,8 @@
-# Budget Optimizer — Plain-Language Explanation
+# Budget Recommendation Optimizer V2 — Plain-Language Explanation
+
+> **Historical document:** This version predates the Financial Plan
+> classification-surplus policy. For the current Financial Plan integration,
+> use [`recommend/v3/financial-plan-integration.md`](../v3/financial-plan-integration.md).
 
 > **What it does:** Takes a user's available money and distributes it across spending categories in the best possible way, respecting their constraints and preferences.
 
@@ -71,8 +75,8 @@ The user's *preferred* spending proportions — e.g., "I want 40% on food, 20% o
 The optimizer frames budget allocation as a **linear program** — a mathematical problem with:
 
 - **Decision variables**: One number per category (how much to allocate), plus one "deviation" variable per category (how far the allocation is from the target ratio).
-- **Priority hierarchy**: Essential categories receive available flexible funds up to their forecast targets before Non-essential categories. Fixed and Minimum amounts remain hard constraints for every category.
-- **Objective within each priority group**: Minimize the weighted deviation from the user's target ratios. Categories with higher `priority_weight` get penalized more for missing their target.
+- **Priority hierarchy**: The solver first guarantees each Essential category a weighted share of scarce funds. It then funds Essentials up to forecast targets before allocating flexible funds to Non-essential categories. Fixed and Minimum amounts remain hard constraints for every category.
+- **Final objective**: After Essential coverage is protected, minimize a combined Essential-shortfall and weighted forecast-shortfall objective. The Essential penalty is deliberately larger than every possible category-weight benefit, so flexible Non-essential categories cannot displace unmet Essential forecasts.
 - **Constraints** (the rules it must follow):
 
 | Constraint | Mathematical form | Plain meaning |
@@ -80,12 +84,14 @@ The optimizer frames budget allocation as a **linear program** — a mathematica
 | **Budget sum** | Σ allocations = available funds | Every peso must be allocated somewhere. |
 | **FIXED** | Allocation = floor = ceiling | Fixed categories get their configured exact amount. |
 | **MINIMUM** | Allocation ≥ floor | Minimum categories cannot be reduced below their configured floor. |
-| **FLEXIBLE** | floor ≤ allocation ≤ ceiling | Flexible categories stay within their bounds and may receive zero. |
+| **Forecast cap** | allocation ≤ forecast target | Flexible and Minimum categories do not exceed their forecast target unless a configured hard floor is higher. |
+
+All recommendations use whole ₱10 units. Fixed amounts must already be divisible by ₱10; configured minimums round up to protect the requirement, while forecast and configured caps round down so the recommendation never exceeds them.
 | **Deviation** | deviation ≥ allocation − target AND deviation ≥ target − allocation | Deviation captures the absolute gap between what was allocated and what was desired. |
 
 ### 2. Solving
 
-The problem is passed to `scipy.optimize.linprog` with the **HiGHS** solver — a fast, production-grade linear programming solver. It finds the allocation that minimizes total deviation while satisfying all constraints.
+The problem is passed to `scipy.optimize.milp` with the **HiGHS** solver as two sequential mixed-integer linear programs: weighted Essential coverage, then Essential-first weighted forecast fit. Allocations are whole ₱10 units, which preserves Essential-first allocation and prevents rounding from breaking the budget, floors, or forecast caps.
 
 ### 3. Feasibility check
 

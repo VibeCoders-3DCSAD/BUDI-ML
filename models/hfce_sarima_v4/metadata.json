@@ -26,7 +26,7 @@
     "primary": {"name": "macro_test_mape_percent", "value": 5.770146303146874},
     "secondary": {"macro_test_smape_percent": 5.524086321075855, "macro_test_mda_percent": 92.5}
   },
-  "decision_rule": "lowest expanding-window four-quarter validation sMAPE; ties resolve by MAE then mean AICc",
+  "decision_rule": "lowest expanding-window four-quarter validation sMAPE; ties resolve by MAE, RMSE, then MDA",
   "winner": "category_specific_sarima",
   "winner_artifact": null,
   "winner_reason": "each of 12 HFCE categories selects its own fixed-s=4 SARIMA order and target transform from the bounded grid",

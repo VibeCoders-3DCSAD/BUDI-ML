@@ -1,4 +1,4 @@
-# Forecaster v3
+# Spending Forecaster V3
 
 ```json
 {

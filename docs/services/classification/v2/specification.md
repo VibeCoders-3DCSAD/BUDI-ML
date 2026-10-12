@@ -1,4 +1,4 @@
-# Financial Classification V2
+# Rule-Based Financial Classification V2 Specification
 
 ```json
 {
@@ -9,7 +9,7 @@
 }
 ```
 
-> **Purpose:** Classification V2 is ODIN's deterministic financial-condition assessment. It applies published financial-resilience thresholds to authoritative user data. It does not use data procurement, synthetic data, model training, model artifacts, or probabilistic confidence scores.
+> **Purpose:** Classification V2 is ODIN's final rule-based financial-condition assessment. It applies published financial-resilience thresholds to authoritative user data. It does not use data procurement, synthetic data, machine-learning training, model artifacts, or probabilistic confidence scores.
 
 ---
 
@@ -29,6 +29,29 @@ Each response records the calculation inputs, applied threshold, source or rule-
 | Credit-card behaviour | Credit-card account history | Twelve consecutive months of account balance history |
 
 The application defines which user-entered budget categories are essential and which constitute basic living costs. Debt payments must be sourced from the Debt Manager's required or minimum payment values. Classification V2 must not derive debt payments from a proportion of total expenses.
+
+---
+
+## Rule-Based Algorithm
+
+Classification V2 evaluates each assessment independently against a fixed, versioned threshold. It does not infer a class from training examples, optimize a score, or combine the assessments into an undisclosed composite label.
+
+```text
+authoritative user inputs
+        |
+published threshold rule
+        |
+assessment label or insufficient-data state
+```
+
+| Assessment | Calculation | Rule-based output |
+| :--- | :--- | :--- |
+| Emergency savings | liquid emergency savings / recurring essential expenses | `EMERGENCY_FUND_ADEQUATE` or `EMERGENCY_FUND_INADEQUATE` |
+| Debt burden | required monthly debt payments / disposable income | `FINANCIALLY_OVERBURDENED` or `NOT_FINANCIALLY_OVERBURDENED` |
+| Financial margin | disposable income - debt payments - basic living costs | `POSITIVE_FINANCIAL_MARGIN` or `NEGATIVE_FINANCIAL_MARGIN` |
+| Credit-card behavior | count of revolving-balance months in the prior 12 consecutive months | `TRANSACTOR`, `LIGHT_REVOLVER`, or `HEAVY_REVOLVER` |
+
+If an assessment lacks a required input, has a non-positive denominator, or lacks the required credit-card history, it returns an explicit insufficient-data state. The system must not substitute population averages, synthetic data, or a predicted classification.
 
 ---
 

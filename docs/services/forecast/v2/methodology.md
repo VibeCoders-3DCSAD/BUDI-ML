@@ -1,4 +1,4 @@
-# Spending Forecaster v2 — HFCE-Calibrated Training
+# Spending Forecaster V2 — HFCE-Calibrated Training
 
 ```json
 {
@@ -9,7 +9,7 @@
 }
 ```
 
-> **What this is:** Companion to [`forecaster.md`](forecaster.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the retired v2 SARIMA artifact actually is. The served `/api/v1/forecast/predict` endpoint now uses the HFCE quarterly forecaster described in `forecaster.md`.
+> **What this is:** Companion to [`forecast/v1/overview.md`](../v1/overview.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the retired v2 SARIMA artifact actually is. The served `/api/v1/forecast/predict` endpoint now uses the HFCE quarterly forecaster described in that overview.
 
 ---
 
@@ -39,13 +39,13 @@ It does **not** claim that the HFCE methodology beat v1 in a controlled bake-off
 | Winner MAPE | 9.40% (label `tier3_sarima`, fit was plain ARIMA) | 6.12% (label `tier3_sarima`, fit is SARIMA) |
 | MAPE reduction vs naive | 74.9% | 83.2% |
 
-The serving explanation, feature list, and inference path in [`forecaster.md`](forecaster.md) still apply. Only the training corpus, fold file, and committed artifact directory differ.
+The serving explanation, feature list, and inference path in [`forecast/v1/overview.md`](../v1/overview.md) still apply. Only the training corpus, fold file, and committed artifact directory differ.
 
 ---
 
 ## Empirical backing
 
-The data methodology is **FIES-anchored, HFCE-calibrated temporal disaggregation with proportional benchmarking**. Full derivation: [`training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`](../../training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md). Operator path: [`training/docs/data-collection/synthetic-generation-v2.md`](../../training/docs/data-collection/synthetic-generation-v2.md).
+The data methodology is **FIES-anchored, HFCE-calibrated temporal disaggregation with proportional benchmarking**. Full derivation: [`training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`](../../../../training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md). Operator path: [`training/docs/data-collection/synthetic-generation-v2.md`](../../../../training/docs/data-collection/synthetic-generation-v2.md).
 
 ### Observed
 
@@ -125,7 +125,7 @@ Random Forest and GRU were not trained on this run. The comparison is naive base
 | `tier3_arima` | 6.60% ± 5.30% | Passes the rule |
 | **`tier3_sarima`** | **6.12% ± 5.07%** | **Winner** (83.2% MAPE reduction) |
 
-Secondary metrics for the winner: MAE 2194.51 ± 1640.58, SMAPE 6.23 ± 4.84, MDA 0.32 ± 0.24, RMSE 4638.37 ± 1233.96, R² 0.83 ± 0.10. Source of truth: [`models/forecaster_v2/evaluation.json`](../../models/forecaster_v2/evaluation.json) and [`evaluation_report.md`](../../models/forecaster_v2/evaluation_report.md).
+Secondary metrics for the winner: MAE 2194.51 ± 1640.58, SMAPE 6.23 ± 4.84, MDA 0.32 ± 0.24, RMSE 4638.37 ± 1233.96, R² 0.83 ± 0.10. Source of truth: [`models/forecaster_v2/evaluation.json`](../../../../models/forecaster_v2/evaluation.json) and [`evaluation_report.md`](../../../../models/forecaster_v2/evaluation_report.md).
 
 The run **passed**. The committed artifact is real SARIMA, not a renamed ARIMA.
 

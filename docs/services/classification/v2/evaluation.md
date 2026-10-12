@@ -1,4 +1,4 @@
-# ODIN Financial Classification Framework, Data Synthesis, and Evaluation Methodology
+# ODIN Financial Classification V2 Framework, Data Synthesis, and Evaluation Methodology
 
 ## 1. Emergency Savings Classification
 

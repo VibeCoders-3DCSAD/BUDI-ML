@@ -20,7 +20,7 @@
 | Anomaly alerts | `tier1_iqr` (1.5×IQR on 24 standardized features) | Quartiles, bounds, flag count, score, threshold. |
 | Budgeting | `scipy.optimize.linprog` (HiGHS) | Write the LP, bind FIXED/MINIMUM/FLEXIBLE constraints, recover the unique optimum on a 4-category instance. |
 
-Companion documents: full pipeline walkthrough in [`pen-and-paper-simulation.md`](pen-and-paper-simulation.md); v2 training note in [`docs/models/forecaster-v2.md`](../../docs/models/forecaster-v2.md).
+Companion documents: full pipeline walkthrough in [`pen-and-paper-simulation.md`](pen-and-paper-simulation.md); v2 training note in [`docs/services/forecast/v2/methodology.md`](../../docs/services/forecast/v2/methodology.md).
 
 **Notation.** ₱ amounts are pesos. `Σ` is a sum over the months (or categories) in the working window. Sample standard deviation uses `n − 1`. Numpy-style linear percentiles are used for Q1/Q3 (the same method `IQRDetector.fit` calls).
 

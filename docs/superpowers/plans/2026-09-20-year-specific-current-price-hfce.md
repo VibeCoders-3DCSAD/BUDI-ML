@@ -51,7 +51,7 @@ Create sub-issues from this plan when ready.
 
 ### 3. Document the Revised Data Contract and Regenerate Training Inputs
 
-- Touch `training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`, `training/docs/data-collection/synthetic-generation-v2.md`, `docs/models/forecaster-v2.md`, and `INDEX.md`.
+- Touch `training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`, `training/docs/data-collection/synthetic-generation-v2.md`, `docs/services/forecast/v2/methodology.md`, and `INDEX.md`.
 - Replace claims that multi-year runs replay the 2023 constant-price pattern with the year-specific current-price contract, clearly distinguishing observed national quarterly values from the synthetic household allocation and documenting the 2026 Q1-Q2 cutoff.
 - Update run commands to use `--months 42`, state that the training corpus spans `2023-01` to `2026-06`, and regenerate ignored `synth_v2/`, processed v2, and forecaster feature datasets only after the unit and integration tests pass. Record any subsequent retraining/evaluation as a separate artifact-release task.
 

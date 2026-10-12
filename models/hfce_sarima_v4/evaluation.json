@@ -25,7 +25,8 @@
     "selection_metric": "smape_percent",
     "tie_breakers": [
       "mae_million_php",
-      "mean_aicc"
+      "rmse_million_php",
+      "mda_percent_descending"
     ]
   },
   "search_space": {
@@ -121,7 +122,6 @@
               "smape_percent": 4.346772850915041,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1635.2739326419432,
             "params": {
               "name": "sarima_300_102_identity",
               "family": "sarima",
@@ -170,7 +170,6 @@
               "smape_percent": 4.353308683859039,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1864.0697428736198,
             "params": {
               "name": "sarima_003_202_identity",
               "family": "sarima",
@@ -219,7 +218,6 @@
               "smape_percent": 4.413891873301431,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1659.354191374021,
             "params": {
               "name": "sarima_301_102_identity",
               "family": "sarima",
@@ -268,7 +266,6 @@
               "smape_percent": 4.4570527673921685,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1658.3584172844871,
             "params": {
               "name": "sarima_101_102_identity",
               "family": "sarima",
@@ -317,7 +314,6 @@
               "smape_percent": 4.45900825561102,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1698.621618583599,
             "params": {
               "name": "sarima_100_102_identity",
               "family": "sarima",
@@ -366,7 +362,6 @@
               "smape_percent": 4.48053730664806,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1696.5916190983016,
             "params": {
               "name": "sarima_003_102_identity",
               "family": "sarima",
@@ -415,7 +410,6 @@
               "smape_percent": 4.490071174929102,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1649.921160888562,
             "params": {
               "name": "sarima_103_102_identity",
               "family": "sarima",
@@ -464,7 +458,6 @@
               "smape_percent": 4.512083094589045,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1637.1652287751526,
             "params": {
               "name": "sarima_202_102_identity",
               "family": "sarima",
@@ -513,7 +506,6 @@
               "smape_percent": 4.516661941605515,
               "mda_percent": 75.0
             },
-            "mean_aicc": 1675.9496491648813,
             "params": {
               "name": "sarima_200_102_identity",
               "family": "sarima",
@@ -562,7 +554,6 @@
               "smape_percent": 4.523811815286603,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1626.8428930646915,
             "params": {
               "name": "sarima_303_202_identity",
               "family": "sarima",
@@ -612,7 +603,6 @@
             "smape_percent": 4.346772850915041,
             "mda_percent": 75.0
           },
-          "mean_aicc": 1635.2739326419432,
           "params": {
             "name": "sarima_300_102_identity",
             "family": "sarima",
@@ -652,7 +642,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 4918.732940365207,
@@ -660,12 +650,6 @@
         "mape_percent": 5.2263781952167,
         "smape_percent": 5.185425628535162,
         "mda_percent": 80.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.8794717319839891,
-        "status": "pass"
       }
     },
     "clothing_footwear": {
@@ -713,7 +697,6 @@
               "smape_percent": 5.887930608492879,
               "mda_percent": 100.0
             },
-            "mean_aicc": -112.250068106574,
             "params": {
               "name": "sarima_003_102_log1p",
               "family": "sarima",
@@ -762,7 +745,6 @@
               "smape_percent": 7.486437335501474,
               "mda_percent": 87.5
             },
-            "mean_aicc": -157.39829770206399,
             "params": {
               "name": "sarima_002_102_log1p",
               "family": "sarima",
@@ -811,7 +793,6 @@
               "smape_percent": 7.600501634996067,
               "mda_percent": 87.5
             },
-            "mean_aicc": -179.50730720131764,
             "params": {
               "name": "sarima_202_101_log1p",
               "family": "sarima",
@@ -860,7 +841,6 @@
               "smape_percent": 7.789139753817392,
               "mda_percent": 87.5
             },
-            "mean_aicc": -178.12570242301425,
             "params": {
               "name": "sarima_000_101_log1p",
               "family": "sarima",
@@ -909,7 +889,6 @@
               "smape_percent": 7.859136498346839,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1664.9679172919155,
             "params": {
               "name": "sarima_303_100_identity",
               "family": "sarima",
@@ -958,7 +937,6 @@
               "smape_percent": 7.89070777922506,
               "mda_percent": 87.5
             },
-            "mean_aicc": -164.13507352022629,
             "params": {
               "name": "sarima_301_010_log1p",
               "family": "sarima",
@@ -1007,7 +985,6 @@
               "smape_percent": 7.955887621662382,
               "mda_percent": 87.5
             },
-            "mean_aicc": -165.39255183580448,
             "params": {
               "name": "sarima_302_100_log1p",
               "family": "sarima",
@@ -1056,7 +1033,6 @@
               "smape_percent": 8.04449193131172,
               "mda_percent": 87.5
             },
-            "mean_aicc": -162.9306876503729,
             "params": {
               "name": "sarima_101_010_log1p",
               "family": "sarima",
@@ -1105,7 +1081,6 @@
               "smape_percent": 8.060724261003429,
               "mda_percent": 87.5
             },
-            "mean_aicc": -163.98165936076848,
             "params": {
               "name": "sarima_202_010_log1p",
               "family": "sarima",
@@ -1154,7 +1129,6 @@
               "smape_percent": 8.130571310529573,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1682.6552842939464,
             "params": {
               "name": "sarima_201_100_identity",
               "family": "sarima",
@@ -1204,7 +1178,6 @@
             "smape_percent": 7.486437335501474,
             "mda_percent": 87.5
           },
-          "mean_aicc": -157.39829770206399,
           "params": {
             "name": "sarima_002_102_log1p",
             "family": "sarima",
@@ -1244,7 +1217,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 3771.6100093762675,
@@ -1252,12 +1225,6 @@
         "mape_percent": 6.364004168287115,
         "smape_percent": 6.080465662910816,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 3.3026734562610826e-17,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "communication": {
@@ -1305,7 +1272,6 @@
               "smape_percent": 0.6213872524502339,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1523.3364540409061,
             "params": {
               "name": "sarima_001_110_identity",
               "family": "sarima",
@@ -1354,7 +1320,6 @@
               "smape_percent": 0.630581954165667,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1521.4261092090767,
             "params": {
               "name": "sarima_002_110_identity",
               "family": "sarima",
@@ -1403,7 +1368,6 @@
               "smape_percent": 0.6795585269218656,
               "mda_percent": 100.0
             },
-            "mean_aicc": -326.4178311046744,
             "params": {
               "name": "sarima_300_111_log1p",
               "family": "sarima",
@@ -1452,7 +1416,6 @@
               "smape_percent": 0.7190542008415701,
               "mda_percent": 100.0
             },
-            "mean_aicc": -324.69944898721974,
             "params": {
               "name": "sarima_302_110_log1p",
               "family": "sarima",
@@ -1501,7 +1464,6 @@
               "smape_percent": 0.7343698498435562,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1486.1923679229562,
             "params": {
               "name": "sarima_100_110_identity",
               "family": "sarima",
@@ -1550,7 +1512,6 @@
               "smape_percent": 0.7774315283099017,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1365.0826594097468,
             "params": {
               "name": "sarima_303_112_identity",
               "family": "sarima",
@@ -1599,7 +1560,6 @@
               "smape_percent": 0.7826441816164806,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1487.0350726187448,
             "params": {
               "name": "sarima_100_011_identity",
               "family": "sarima",
@@ -1648,7 +1608,6 @@
               "smape_percent": 0.7885809286126986,
               "mda_percent": 100.0
             },
-            "mean_aicc": -350.0298670736161,
             "params": {
               "name": "sarima_200_010_log1p",
               "family": "sarima",
@@ -1697,7 +1656,6 @@
               "smape_percent": 0.7984403891213387,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1500.3934168560486,
             "params": {
               "name": "sarima_003_110_identity",
               "family": "sarima",
@@ -1746,7 +1704,6 @@
               "smape_percent": 0.7995244447371371,
               "mda_percent": 100.0
             },
-            "mean_aicc": -335.4063879245215,
             "params": {
               "name": "sarima_103_201_log1p",
               "family": "sarima",
@@ -1796,7 +1753,6 @@
             "smape_percent": 0.6213872524502339,
             "mda_percent": 100.0
           },
-          "mean_aicc": 1523.3364540409061,
           "params": {
             "name": "sarima_001_110_identity",
             "family": "sarima",
@@ -1836,7 +1792,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 5421.215056858737,
@@ -1844,12 +1800,6 @@
         "mape_percent": 3.6938706455536443,
         "smape_percent": 3.8024959815541175,
         "mda_percent": 60.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 2.758249096953594e-07,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "education": {
@@ -1897,7 +1847,6 @@
               "smape_percent": 1.409470140693937,
               "mda_percent": 87.5
             },
-            "mean_aicc": -238.79758452408544,
             "params": {
               "name": "sarima_000_201_log1p",
               "family": "sarima",
@@ -1946,7 +1895,6 @@
               "smape_percent": 1.4231477785575073,
               "mda_percent": 87.5
             },
-            "mean_aicc": -236.02397988591986,
             "params": {
               "name": "sarima_000_200_log1p",
               "family": "sarima",
@@ -1995,7 +1943,6 @@
               "smape_percent": 1.6224903180281303,
               "mda_percent": 87.5
             },
-            "mean_aicc": -297.6395825627286,
             "params": {
               "name": "sarima_002_101_log1p",
               "family": "sarima",
@@ -2044,7 +1991,6 @@
               "smape_percent": 1.624582364282015,
               "mda_percent": 87.5
             },
-            "mean_aicc": -308.4706536412051,
             "params": {
               "name": "sarima_003_100_log1p",
               "family": "sarima",
@@ -2093,7 +2039,6 @@
               "smape_percent": 1.7098785475146212,
               "mda_percent": 87.5
             },
-            "mean_aicc": -289.7827097688893,
             "params": {
               "name": "sarima_101_102_log1p",
               "family": "sarima",
@@ -2142,7 +2087,6 @@
               "smape_percent": 1.7116301556561342,
               "mda_percent": 87.5
             },
-            "mean_aicc": -292.01655244457515,
             "params": {
               "name": "sarima_002_201_log1p",
               "family": "sarima",
@@ -2191,7 +2135,6 @@
               "smape_percent": 1.7985413239180903,
               "mda_percent": 87.5
             },
-            "mean_aicc": -295.8318107024687,
             "params": {
               "name": "sarima_001_100_log1p",
               "family": "sarima",
@@ -2240,7 +2183,6 @@
               "smape_percent": 1.8094306527086335,
               "mda_percent": 87.5
             },
-            "mean_aicc": -278.3997124538623,
             "params": {
               "name": "sarima_001_200_log1p",
               "family": "sarima",
@@ -2289,7 +2231,6 @@
               "smape_percent": 1.819444091227368,
               "mda_percent": 87.5
             },
-            "mean_aicc": -285.7134331852841,
             "params": {
               "name": "sarima_001_101_log1p",
               "family": "sarima",
@@ -2338,7 +2279,6 @@
               "smape_percent": 1.831428499629303,
               "mda_percent": 87.5
             },
-            "mean_aicc": -295.6145521417835,
             "params": {
               "name": "sarima_002_200_log1p",
               "family": "sarima",
@@ -2388,7 +2328,6 @@
             "smape_percent": 1.409470140693937,
             "mda_percent": 87.5
           },
-          "mean_aicc": -238.79758452408544,
           "params": {
             "name": "sarima_000_201_log1p",
             "family": "sarima",
@@ -2428,7 +2367,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 3936.9541618545945,
@@ -2436,12 +2375,6 @@
         "mape_percent": 1.4909805536090648,
         "smape_percent": 1.49704878666199,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 3.9840771742649e-16,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "food": {
@@ -2489,7 +2422,6 @@
               "smape_percent": 1.8761959566838862,
               "mda_percent": 100.0
             },
-            "mean_aicc": -385.17922078842287,
             "params": {
               "name": "sarima_002_200_log1p",
               "family": "sarima",
@@ -2538,7 +2470,6 @@
               "smape_percent": 1.881637169526737,
               "mda_percent": 100.0
             },
-            "mean_aicc": -345.7782057361056,
             "params": {
               "name": "sarima_000_101_log1p",
               "family": "sarima",
@@ -2587,7 +2518,6 @@
               "smape_percent": 1.9330022441140227,
               "mda_percent": 100.0
             },
-            "mean_aicc": -388.20127187782344,
             "params": {
               "name": "sarima_001_101_log1p",
               "family": "sarima",
@@ -2636,7 +2566,6 @@
               "smape_percent": 1.945753917986924,
               "mda_percent": 100.0
             },
-            "mean_aicc": -374.5882494901873,
             "params": {
               "name": "sarima_001_201_log1p",
               "family": "sarima",
@@ -2685,7 +2614,6 @@
               "smape_percent": 1.9501740405362975,
               "mda_percent": 100.0
             },
-            "mean_aicc": -376.7950897670441,
             "params": {
               "name": "sarima_001_200_log1p",
               "family": "sarima",
@@ -2734,7 +2662,6 @@
               "smape_percent": 1.9576034232137454,
               "mda_percent": 100.0
             },
-            "mean_aicc": -330.3674223474969,
             "params": {
               "name": "sarima_000_200_log1p",
               "family": "sarima",
@@ -2783,7 +2710,6 @@
               "smape_percent": 1.9763486574574565,
               "mda_percent": 100.0
             },
-            "mean_aicc": -328.2578254311427,
             "params": {
               "name": "sarima_000_201_log1p",
               "family": "sarima",
@@ -2832,7 +2758,6 @@
               "smape_percent": 1.9880271357611363,
               "mda_percent": 100.0
             },
-            "mean_aicc": -364.5747273907342,
             "params": {
               "name": "sarima_001_102_log1p",
               "family": "sarima",
@@ -2881,7 +2806,6 @@
               "smape_percent": 2.012515858447534,
               "mda_percent": 100.0
             },
-            "mean_aicc": -323.67217359389133,
             "params": {
               "name": "sarima_000_202_log1p",
               "family": "sarima",
@@ -2930,7 +2854,6 @@
               "smape_percent": 2.080215999460413,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1685.1264925293015,
             "params": {
               "name": "sarima_303_211_identity",
               "family": "sarima",
@@ -2980,7 +2903,6 @@
             "smape_percent": 1.881637169526737,
             "mda_percent": 100.0
           },
-          "mean_aicc": -345.7782057361056,
           "params": {
             "name": "sarima_000_101_log1p",
             "family": "sarima",
@@ -3020,7 +2942,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 143032.10710550638,
@@ -3028,12 +2950,6 @@
         "mape_percent": 7.4758500422250105,
         "smape_percent": 7.152608354884082,
         "mda_percent": 90.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 3.920872971535659e-17,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "furnishings_household": {
@@ -3081,7 +2997,6 @@
               "smape_percent": 2.372094248081124,
               "mda_percent": 100.0
             },
-            "mean_aicc": -228.11896856181073,
             "params": {
               "name": "sarima_000_102_log1p",
               "family": "sarima",
@@ -3130,7 +3045,6 @@
               "smape_percent": 2.7546485995350225,
               "mda_percent": 87.5
             },
-            "mean_aicc": -225.97183174102634,
             "params": {
               "name": "sarima_000_202_log1p",
               "family": "sarima",
@@ -3179,7 +3093,6 @@
               "smape_percent": 2.955982190769358,
               "mda_percent": 87.5
             },
-            "mean_aicc": -237.65323179072806,
             "params": {
               "name": "sarima_001_102_log1p",
               "family": "sarima",
@@ -3228,7 +3141,6 @@
               "smape_percent": 3.476365857491998,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1652.4140923184523,
             "params": {
               "name": "sarima_202_200_identity",
               "family": "sarima",
@@ -3277,7 +3189,6 @@
               "smape_percent": 3.5333744028723366,
               "mda_percent": 87.5
             },
-            "mean_aicc": -237.72011356390527,
             "params": {
               "name": "sarima_000_101_log1p",
               "family": "sarima",
@@ -3326,7 +3237,6 @@
               "smape_percent": 3.571145084929185,
               "mda_percent": 87.5
             },
-            "mean_aicc": -228.63796329151617,
             "params": {
               "name": "sarima_000_201_log1p",
               "family": "sarima",
@@ -3375,7 +3285,6 @@
               "smape_percent": 3.7476348720194292,
               "mda_percent": 100.0
             },
-            "mean_aicc": -227.63580771644595,
             "params": {
               "name": "sarima_103_102_log1p",
               "family": "sarima",
@@ -3424,7 +3333,6 @@
               "smape_percent": 3.7911601654569282,
               "mda_percent": 87.5
             },
-            "mean_aicc": -252.0884019589044,
             "params": {
               "name": "sarima_302_100_log1p",
               "family": "sarima",
@@ -3473,7 +3381,6 @@
               "smape_percent": 3.800999451441342,
               "mda_percent": 87.5
             },
-            "mean_aicc": -230.49268234009736,
             "params": {
               "name": "sarima_000_200_log1p",
               "family": "sarima",
@@ -3522,7 +3429,6 @@
               "smape_percent": 3.822275536293623,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1635.8792458576108,
             "params": {
               "name": "sarima_000_201_identity",
               "family": "sarima",
@@ -3572,7 +3478,6 @@
             "smape_percent": 2.372094248081124,
             "mda_percent": 100.0
           },
-          "mean_aicc": -228.11896856181073,
           "params": {
             "name": "sarima_000_102_log1p",
             "family": "sarima",
@@ -3612,7 +3517,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 2453.141568100662,
@@ -3620,12 +3525,6 @@
         "mape_percent": 1.8281331465771187,
         "smape_percent": 1.822567207838638,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 2.083228770242061e-17,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "health": {
@@ -3673,7 +3572,6 @@
               "smape_percent": 2.304624817477264,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1830.5318096609012,
             "params": {
               "name": "sarima_001_200_identity",
               "family": "sarima",
@@ -3722,7 +3620,6 @@
               "smape_percent": 2.3147717089987743,
               "mda_percent": 100.0
             },
-            "mean_aicc": -283.1261986121002,
             "params": {
               "name": "sarima_101_110_log1p",
               "family": "sarima",
@@ -3771,7 +3668,6 @@
               "smape_percent": 2.3413668469286724,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1614.9670201771817,
             "params": {
               "name": "sarima_000_102_identity",
               "family": "sarima",
@@ -3820,7 +3716,6 @@
               "smape_percent": 2.36311162034136,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1988.4598590278697,
             "params": {
               "name": "sarima_001_202_identity",
               "family": "sarima",
@@ -3869,7 +3764,6 @@
               "smape_percent": 2.3728047329955184,
               "mda_percent": 100.0
             },
-            "mean_aicc": -282.6427313469368,
             "params": {
               "name": "sarima_011_200_log1p",
               "family": "sarima",
@@ -3918,7 +3812,6 @@
               "smape_percent": 2.3750402195030498,
               "mda_percent": 100.0
             },
-            "mean_aicc": -256.7773356342471,
             "params": {
               "name": "sarima_000_212_log1p",
               "family": "sarima",
@@ -3967,7 +3860,6 @@
               "smape_percent": 2.382863974157781,
               "mda_percent": 100.0
             },
-            "mean_aicc": -257.1454665354766,
             "params": {
               "name": "sarima_001_212_log1p",
               "family": "sarima",
@@ -4016,7 +3908,6 @@
               "smape_percent": 2.3855269554107337,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1832.249544405991,
             "params": {
               "name": "sarima_001_201_identity",
               "family": "sarima",
@@ -4065,7 +3956,6 @@
               "smape_percent": 2.395800666610222,
               "mda_percent": 100.0
             },
-            "mean_aicc": -281.63782672315784,
             "params": {
               "name": "sarima_012_201_log1p",
               "family": "sarima",
@@ -4114,7 +4004,6 @@
               "smape_percent": 2.4067868866127546,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1986.165222319894,
             "params": {
               "name": "sarima_001_102_identity",
               "family": "sarima",
@@ -4164,7 +4053,6 @@
             "smape_percent": 2.304624817477264,
             "mda_percent": 100.0
           },
-          "mean_aicc": 1830.5318096609012,
           "params": {
             "name": "sarima_001_200_identity",
             "family": "sarima",
@@ -4204,7 +4092,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 11766.9246257744,
@@ -4212,12 +4100,6 @@
         "mape_percent": 4.80666533130321,
         "smape_percent": 4.953891888172691,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.0004492433803440649,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "housing_water_utilities": {
@@ -4265,7 +4147,6 @@
               "smape_percent": 1.2922812369854022,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1773.2609291099438,
             "params": {
               "name": "sarima_302_102_identity",
               "family": "sarima",
@@ -4314,7 +4195,6 @@
               "smape_percent": 1.7477071055898699,
               "mda_percent": 100.0
             },
-            "mean_aicc": -311.09204240668225,
             "params": {
               "name": "sarima_002_202_log1p",
               "family": "sarima",
@@ -4363,7 +4243,6 @@
               "smape_percent": 1.7596135718923718,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1774.0161915507824,
             "params": {
               "name": "sarima_202_102_identity",
               "family": "sarima",
@@ -4412,7 +4291,6 @@
               "smape_percent": 1.8106105144584432,
               "mda_percent": 100.0
             },
-            "mean_aicc": -340.48076746654925,
             "params": {
               "name": "sarima_002_100_log1p",
               "family": "sarima",
@@ -4461,7 +4339,6 @@
               "smape_percent": 1.8395910243064084,
               "mda_percent": 100.0
             },
-            "mean_aicc": -319.78650142379433,
             "params": {
               "name": "sarima_002_201_log1p",
               "family": "sarima",
@@ -4510,7 +4387,6 @@
               "smape_percent": 2.0178168633628806,
               "mda_percent": 100.0
             },
-            "mean_aicc": -336.03524923656914,
             "params": {
               "name": "sarima_201_102_log1p",
               "family": "sarima",
@@ -4559,7 +4435,6 @@
               "smape_percent": 2.042903977987786,
               "mda_percent": 100.0
             },
-            "mean_aicc": -285.99271378940307,
             "params": {
               "name": "sarima_000_102_log1p",
               "family": "sarima",
@@ -4608,7 +4483,6 @@
               "smape_percent": 2.0747157026120275,
               "mda_percent": 100.0
             },
-            "mean_aicc": -357.1937204858435,
             "params": {
               "name": "sarima_201_100_log1p",
               "family": "sarima",
@@ -4657,7 +4531,6 @@
               "smape_percent": 2.085271618083531,
               "mda_percent": 100.0
             },
-            "mean_aicc": -355.42316865613316,
             "params": {
               "name": "sarima_201_101_log1p",
               "family": "sarima",
@@ -4706,7 +4579,6 @@
               "smape_percent": 2.1001349183911544,
               "mda_percent": 100.0
             },
-            "mean_aicc": -343.1677436641776,
             "params": {
               "name": "sarima_200_102_log1p",
               "family": "sarima",
@@ -4756,7 +4628,6 @@
             "smape_percent": 1.7477071055898699,
             "mda_percent": 100.0
           },
-          "mean_aicc": -311.09204240668225,
           "params": {
             "name": "sarima_002_202_log1p",
             "family": "sarima",
@@ -4796,7 +4667,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 44739.61781989217,
@@ -4804,12 +4675,6 @@
         "mape_percent": 7.308834664719992,
         "smape_percent": 6.920003108553016,
         "mda_percent": 80.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 2.027326808319438e-14,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "miscellaneous_goods_services": {
@@ -4857,7 +4722,6 @@
               "smape_percent": 1.204508462075311,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1933.9273016848804,
             "params": {
               "name": "sarima_301_101_identity",
               "family": "sarima",
@@ -4906,7 +4770,6 @@
               "smape_percent": 1.3661001072077237,
               "mda_percent": 100.0
             },
-            "mean_aicc": -193.83863188884555,
             "params": {
               "name": "sarima_002_101_log1p",
               "family": "sarima",
@@ -4955,7 +4818,6 @@
               "smape_percent": 1.4511635459529002,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1944.667656806509,
             "params": {
               "name": "sarima_202_101_identity",
               "family": "sarima",
@@ -5004,7 +4866,6 @@
               "smape_percent": 1.5667569028046966,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1952.71095965196,
             "params": {
               "name": "sarima_201_100_identity",
               "family": "sarima",
@@ -5053,7 +4914,6 @@
               "smape_percent": 1.5865481349798225,
               "mda_percent": 100.0
             },
-            "mean_aicc": -214.99040207639086,
             "params": {
               "name": "sarima_201_200_log1p",
               "family": "sarima",
@@ -5102,7 +4962,6 @@
               "smape_percent": 1.6808688943897612,
               "mda_percent": 100.0
             },
-            "mean_aicc": -210.94409395571614,
             "params": {
               "name": "sarima_102_100_log1p",
               "family": "sarima",
@@ -5151,7 +5010,6 @@
               "smape_percent": 1.701584328066541,
               "mda_percent": 100.0
             },
-            "mean_aicc": -214.72212089040522,
             "params": {
               "name": "sarima_200_100_log1p",
               "family": "sarima",
@@ -5200,7 +5058,6 @@
               "smape_percent": 1.735525174491145,
               "mda_percent": 100.0
             },
-            "mean_aicc": -210.69598186751432,
             "params": {
               "name": "sarima_212_100_log1p",
               "family": "sarima",
@@ -5249,7 +5106,6 @@
               "smape_percent": 1.7738641946414904,
               "mda_percent": 100.0
             },
-            "mean_aicc": -220.09528071807262,
             "params": {
               "name": "sarima_001_200_log1p",
               "family": "sarima",
@@ -5298,7 +5154,6 @@
               "smape_percent": 1.7851158186769276,
               "mda_percent": 100.0
             },
-            "mean_aicc": -216.09341327286563,
             "params": {
               "name": "sarima_002_200_log1p",
               "family": "sarima",
@@ -5348,7 +5203,6 @@
             "smape_percent": 1.204508462075311,
             "mda_percent": 100.0
           },
-          "mean_aicc": 1933.9273016848804,
           "params": {
             "name": "sarima_301_101_identity",
             "family": "sarima",
@@ -5388,7 +5242,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 16470.619708438717,
@@ -5396,12 +5250,6 @@
         "mape_percent": 2.1828876319807686,
         "smape_percent": 2.146986815378519,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.05216692280350737,
-        "status": "pass"
       }
     },
     "recreation_culture": {
@@ -5449,7 +5297,6 @@
               "smape_percent": 6.908130333468406,
               "mda_percent": 100.0
             },
-            "mean_aicc": -73.08972817418774,
             "params": {
               "name": "sarima_310_100_log1p",
               "family": "sarima",
@@ -5498,7 +5345,6 @@
               "smape_percent": 7.309944303440746,
               "mda_percent": 100.0
             },
-            "mean_aicc": -81.37525701305219,
             "params": {
               "name": "sarima_110_100_log1p",
               "family": "sarima",
@@ -5547,7 +5393,6 @@
               "smape_percent": 7.327529661354045,
               "mda_percent": 100.0
             },
-            "mean_aicc": -83.43496651597275,
             "params": {
               "name": "sarima_011_100_log1p",
               "family": "sarima",
@@ -5596,7 +5441,6 @@
               "smape_percent": 7.394158273855385,
               "mda_percent": 100.0
             },
-            "mean_aicc": -77.23770726048431,
             "params": {
               "name": "sarima_210_100_log1p",
               "family": "sarima",
@@ -5645,7 +5489,6 @@
               "smape_percent": 7.436375930705333,
               "mda_percent": 100.0
             },
-            "mean_aicc": -81.34023701825033,
             "params": {
               "name": "sarima_012_100_log1p",
               "family": "sarima",
@@ -5694,7 +5537,6 @@
               "smape_percent": 8.350369099937371,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1754.4596814131728,
             "params": {
               "name": "sarima_212_100_identity",
               "family": "sarima",
@@ -5743,7 +5585,6 @@
               "smape_percent": 8.870494294295957,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1753.2814808009027,
             "params": {
               "name": "sarima_111_100_identity",
               "family": "sarima",
@@ -5792,7 +5633,6 @@
               "smape_percent": 9.074337886421368,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1749.3796609017463,
             "params": {
               "name": "sarima_301_101_identity",
               "family": "sarima",
@@ -5841,7 +5681,6 @@
               "smape_percent": 9.31564525152921,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1774.9922161212828,
             "params": {
               "name": "sarima_110_100_identity",
               "family": "sarima",
@@ -5890,7 +5729,6 @@
               "smape_percent": 9.467646136929227,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1783.1103211506597,
             "params": {
               "name": "sarima_011_100_identity",
               "family": "sarima",
@@ -5940,7 +5778,6 @@
             "smape_percent": 6.908130333468406,
             "mda_percent": 100.0
           },
-          "mean_aicc": -73.08972817418774,
           "params": {
             "name": "sarima_310_100_log1p",
             "family": "sarima",
@@ -5980,7 +5817,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 5485.821407989829,
@@ -5988,12 +5825,6 @@
         "mape_percent": 7.521585077062719,
         "smape_percent": 6.955291454440701,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.05788551714142124,
-        "status": "pass"
       }
     },
     "restaurants_hotels": {
@@ -6041,7 +5872,6 @@
               "smape_percent": 5.170281472056209,
               "mda_percent": 100.0
             },
-            "mean_aicc": -104.48398769486158,
             "params": {
               "name": "sarima_011_100_log1p",
               "family": "sarima",
@@ -6090,7 +5920,6 @@
               "smape_percent": 5.18991363984785,
               "mda_percent": 100.0
             },
-            "mean_aicc": -102.1618637153623,
             "params": {
               "name": "sarima_110_100_log1p",
               "family": "sarima",
@@ -6139,7 +5968,6 @@
               "smape_percent": 5.382296811392455,
               "mda_percent": 100.0
             },
-            "mean_aicc": -98.2689361514827,
             "params": {
               "name": "sarima_210_100_log1p",
               "family": "sarima",
@@ -6188,7 +6016,6 @@
               "smape_percent": 6.081616720086008,
               "mda_percent": 100.0
             },
-            "mean_aicc": -102.75446467154813,
             "params": {
               "name": "sarima_012_100_log1p",
               "family": "sarima",
@@ -6237,7 +6064,6 @@
               "smape_percent": 6.278657034022136,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1926.43695395147,
             "params": {
               "name": "sarima_210_100_identity",
               "family": "sarima",
@@ -6286,7 +6112,6 @@
               "smape_percent": 6.3045060688120325,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1922.2513170297066,
             "params": {
               "name": "sarima_212_100_identity",
               "family": "sarima",
@@ -6335,7 +6160,6 @@
               "smape_percent": 6.481467005249216,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1982.7767035453062,
             "params": {
               "name": "sarima_011_100_identity",
               "family": "sarima",
@@ -6384,7 +6208,6 @@
               "smape_percent": 6.636070713465855,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1961.7490186324346,
             "params": {
               "name": "sarima_110_100_identity",
               "family": "sarima",
@@ -6433,7 +6256,6 @@
               "smape_percent": 6.73904479293474,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1965.1584875154922,
             "params": {
               "name": "sarima_112_100_identity",
               "family": "sarima",
@@ -6482,7 +6304,6 @@
               "smape_percent": 6.779529335378941,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1988.7155568776395,
             "params": {
               "name": "sarima_012_100_identity",
               "family": "sarima",
@@ -6532,7 +6353,6 @@
             "smape_percent": 5.170281472056209,
             "mda_percent": 100.0
           },
-          "mean_aicc": -104.48398769486158,
           "params": {
             "name": "sarima_011_100_log1p",
             "family": "sarima",
@@ -6572,7 +6392,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 67334.66390980575,
@@ -6580,12 +6400,6 @@
         "mape_percent": 16.112133527485568,
         "smape_percent": 14.440797334891665,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.042594780294378465,
-        "status": "warning_autocorrelation_detected"
       }
     },
     "transport": {
@@ -6633,7 +6447,6 @@
               "smape_percent": 5.5986316337887585,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1979.773839765483,
             "params": {
               "name": "sarima_201_001_identity",
               "family": "sarima",
@@ -6682,7 +6495,6 @@
               "smape_percent": 5.6228683607805925,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1981.4011972992394,
             "params": {
               "name": "sarima_301_001_identity",
               "family": "sarima",
@@ -6731,7 +6543,6 @@
               "smape_percent": 5.834242999906823,
               "mda_percent": 100.0
             },
-            "mean_aicc": -110.12000165284178,
             "params": {
               "name": "sarima_202_100_log1p",
               "family": "sarima",
@@ -6780,7 +6591,6 @@
               "smape_percent": 6.319093046582077,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1954.329748066385,
             "params": {
               "name": "sarima_111_001_identity",
               "family": "sarima",
@@ -6829,7 +6639,6 @@
               "smape_percent": 6.351254211449381,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1931.212056101655,
             "params": {
               "name": "sarima_112_101_identity",
               "family": "sarima",
@@ -6878,7 +6687,6 @@
               "smape_percent": 6.520489704126262,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1821.1605766711482,
             "params": {
               "name": "sarima_213_202_identity",
               "family": "sarima",
@@ -6927,7 +6735,6 @@
               "smape_percent": 6.559840384689345,
               "mda_percent": 87.5
             },
-            "mean_aicc": 1864.969443066931,
             "params": {
               "name": "sarima_111_202_identity",
               "family": "sarima",
@@ -6976,7 +6783,6 @@
               "smape_percent": 6.867382752491215,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1974.5642054701148,
             "params": {
               "name": "sarima_112_100_identity",
               "family": "sarima",
@@ -7025,7 +6831,6 @@
               "smape_percent": 7.088396342960484,
               "mda_percent": 100.0
             },
-            "mean_aicc": -110.42040522442085,
             "params": {
               "name": "sarima_110_100_log1p",
               "family": "sarima",
@@ -7074,7 +6879,6 @@
               "smape_percent": 7.1539446636904955,
               "mda_percent": 100.0
             },
-            "mean_aicc": 1870.7778709899908,
             "params": {
               "name": "sarima_210_201_identity",
               "family": "sarima",
@@ -7124,7 +6928,6 @@
             "smape_percent": 5.5986316337887585,
             "mda_percent": 100.0
           },
-          "mean_aicc": 1979.773839765483,
           "params": {
             "name": "sarima_201_001_identity",
             "family": "sarima",
@@ -7164,7 +6967,7 @@
             }
           ]
         },
-        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE then mean AICc"
+        "selection_rule": "lowest rolling 4-quarter sMAPE; ties resolved by MAE, RMSE, then MDA"
       },
       "test_metrics": {
         "mae_million_php": 27060.713394691433,
@@ -7172,12 +6975,6 @@
         "mape_percent": 5.230432653741586,
         "smape_percent": 5.331453629088858,
         "mda_percent": 100.0
-      },
-      "residual_diagnostics": {
-        "test": "Ljung-Box",
-        "lag": 8,
-        "p_value": 0.0235926645829815,
-        "status": "warning_autocorrelation_detected"
       }
     }
   },

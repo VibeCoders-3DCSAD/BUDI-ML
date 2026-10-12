@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import anomaly, budget, classification, forecast, health, pfp
+from app.api import budget, classification, forecast, health, pfp
 from app.core.config import SERVICE_VERSION
 from app.models.registry import ModelRegistry
 
@@ -29,7 +29,7 @@ app = FastAPI(
     version=SERVICE_VERSION,
     description=(
         "Machine learning microservice for PFP classification, expense "
-        "forecasting, anomaly detection, and budget optimization."
+        "forecasting, and budget optimization."
     ),
     lifespan=lifespan,
 )
@@ -38,7 +38,6 @@ app.include_router(health.router)
 app.include_router(classification.router)
 app.include_router(pfp.router)
 app.include_router(forecast.router)
-app.include_router(anomaly.router)
 app.include_router(budget.router)
 
 

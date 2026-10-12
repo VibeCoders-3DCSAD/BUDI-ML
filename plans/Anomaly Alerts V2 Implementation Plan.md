@@ -6,7 +6,7 @@ Replace served global-artifact anomaly scoring with a per-user, per-category tra
 
 ## Source Of Truth
 
-- [Anomaly Alerts V2 Methodology](../docs/models/anomaly-alerts-v2.md) (version 2.2.0).
+- [Anomaly Alerts V2 Methodology](../docs/services/iqr/v2/methodology.md) (version 2.2.0).
 - [Repository standards](../docs/standards/REPOSITORY-STANDARDS.md) and [documentation format](../docs/standards/documentation-format.md).
 - Existing interfaces: `app/api/anomaly.py`, `app/schemas/anomaly.py`, `app/schemas/common.py`, `app/services/anomaly_service.py`.
 
@@ -34,7 +34,7 @@ Create sub-issues from this plan when ready; no Linear parent issue was provided
 
 ### 1. Lock the data and response contract
 
-- Files: `docs/models/anomaly-alerts-v2.md`, `app/schemas/common.py`, `app/schemas/anomaly.py`, `INDEX.md`.
+- Files: `docs/services/iqr/v2/methodology.md`, `app/schemas/common.py`, `app/schemas/anomaly.py`, `INDEX.md`.
 - Specify the exact three-calendar-month boundary, timezone/date parsing and `(timestamp, transaction_id)` order; require unique non-null IDs for scoring and canonical category IDs. Define a trusted user-identity/history-provenance boundary before accepting caller-supplied `user_id` and transactions (the current request has no transaction owner or authenticated history source), plus response identity, nullable bounds/severity for both insufficient states, zero-IQR bounds behavior, and a ruleset version; reflect the now-single-channel methodology in the index.
 
 ### 2. Implement the personal IQR decision engine
@@ -49,12 +49,12 @@ Create sub-issues from this plan when ready; no Linear parent issue was provided
 
 ### 4. Build held-out IQR evaluation only
 
-- Files: `training/scripts/generate_transactions_v2.py` (reuse clean generation with `--no-anomalies`), `training/scripts/evaluate_personal_iqr.py` (new), `tests/test_personal_iqr_evaluation.py` (new), `docs/models/anomaly-alerts-v2.md`.
+- Files: `training/scripts/generate_transactions_v2.py` (reuse clean generation with `--no-anomalies`), `training/scripts/evaluate_personal_iqr.py` (new), `tests/test_personal_iqr_evaluation.py` (new), `docs/services/iqr/v2/methodology.md`.
 - Generate or select clean synthetic user histories with stable transaction IDs; reserve a chronological held-out test interval per user/category, sample eligible test transactions, and inject only 3×–5× amount spikes in a separate `anomaly_test` copy with the provenance fields in the spec. Use the production decision engine with rolling earlier-history baselines (including flagged observations after scoring), report Accuracy/Precision/Recall/F1 with sample size, rate, undefined-metric handling and insufficient-state coverage; do not reuse v1's mixed anomaly injection or feed test interventions into the forecaster corpus.
 
 ### 5. Reconcile documentation and verify end to end
 
-- Files: `README.md`, `INDEX.md`, `docs/models/anomaly-detector.md`, `docs/models/TEAMMATE-GUIDE.md`, `docs/models/anomaly-alerts-v2.md`, `tests/test_anomaly.py`, `tests/test_health.py` (only where claims or tests are affected).
+- Files: `README.md`, `INDEX.md`, `docs/services/iqr/v1/overview.md`, `docs/models/TEAMMATE-GUIDE.md`, `docs/services/iqr/v2/methodology.md`, `tests/test_anomaly.py`, `tests/test_health.py` (only where claims or tests are affected).
 - Mark old trained-anomaly guidance as historical where appropriate, document the served personal rule and evaluation-only dataset, and check API examples and readiness claims against observed behavior. Run `.venv/bin/pytest tests/test_anomaly.py tests/test_health.py tests/test_personal_iqr_evaluation.py`, `.venv/bin/pytest`, `.venv/bin/ruff check .`, `.venv/bin/ruff format --check .`, `.venv/bin/mypy app`, and `git diff --check`; report pre-existing failures separately.
 
 ## Acceptance Criteria
