@@ -13,6 +13,11 @@ from app.services.features import transactions_to_frame
 
 logger = logging.getLogger(__name__)
 
+# Completed months that feed the baseline, ending with last month.
+BASELINE_LOOKBACK_MONTHS = 12
+# A category whose latest completed-month spend is this many months old is stale.
+STALE_CATEGORY_MONTHS = 6
+
 
 def _round_to_whole_peso(amount: float) -> float:
     return float(Decimal(str(amount)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
@@ -50,14 +55,17 @@ def _monthly_baseline(
     expenses: pd.DataFrame, category: str, as_of: date
 ) -> tuple[float, np.ndarray, list[str]]:
     current_month = pd.Period(as_of, freq="M")
+    expense_months = expenses["date"].dt.to_period("M")
     completed = expenses.loc[
-        expenses["date"].dt.to_period("M").lt(current_month)
-        & expenses["date"].dt.year.eq(as_of.year)
+        expense_months.lt(current_month)
+        & expense_months.ge(current_month - BASELINE_LOOKBACK_MONTHS)
         & expenses["category"].eq(category)
     ]
     monthly = completed.groupby(completed["date"].dt.to_period("M"))["amount"].sum()
     if monthly.empty:
-        raise ValueError(f"forecast requires a completed current-year {category} month")
+        raise ValueError(f"forecast requires a completed {category} month")
+    if monthly.index.max() <= current_month - STALE_CATEGORY_MONTHS:
+        raise ValueError(f"forecast has no recent {category} spending")
     values = monthly.to_numpy(dtype="float64")
     weights = np.arange(1, len(values) + 1, dtype="float64")
     return (
