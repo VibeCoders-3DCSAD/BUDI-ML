@@ -33,8 +33,8 @@ def _inverse_hfce_values(values: np.ndarray, transform: str) -> np.ndarray:
     raise ValueError(f"unknown HFCE target transform: {transform}")
 
 
-def _hfce_history_and_forecast(artifact: dict, forecast_steps: int) -> tuple[np.ndarray, float]:
-    """Forecast either a statsmodels artifact or the retained seasonal-naive baseline."""
+def _hfce_quarterly_series(artifact: dict, forecast_steps: int) -> pd.Series:
+    """Observed plus forecast HFCE values, indexed by quarter, for either artifact family."""
     if artifact.get("family", "sarima") != "seasonal_naive":
         transform = artifact["transform"]
         history = _inverse_hfce_values(
@@ -43,12 +43,14 @@ def _hfce_history_and_forecast(artifact: dict, forecast_steps: int) -> tuple[np.
         forecast = _inverse_hfce_values(
             np.asarray(artifact["model"].forecast(forecast_steps)), transform
         )
-        return history, float(forecast[-1])
-
-    history = np.asarray(artifact["model"], dtype="float64").tolist()
-    for _ in range(forecast_steps):
-        history.append(history[-4])
-    return np.asarray(history[:-forecast_steps]), float(history[-1])
+        values = [*history.tolist(), *np.asarray(forecast, dtype="float64").reshape(-1).tolist()]
+    else:
+        values = np.asarray(artifact["model"], dtype="float64").tolist()
+        for _ in range(forecast_steps):
+            values.append(values[-4])
+    last_quarter = pd.Period(artifact["period_end"], freq="Q") + forecast_steps
+    quarters = pd.period_range(end=last_quarter, periods=len(values), freq="Q")
+    return pd.Series(values, index=quarters, dtype="float64")
 
 
 def _monthly_baseline(
@@ -121,16 +123,27 @@ def forecast(
         forecast_steps = target_quarter.ordinal - artifact_quarter.ordinal
         if forecast_steps < 1:
             raise ValueError("forecast data is unavailable for the next calendar month")
-        national_history, national_forecast = _hfce_history_and_forecast(artifact, forecast_steps)
-        national_baseline = float(np.median(national_history[-4:]))
+        national = _hfce_quarterly_series(artifact, forecast_steps)
+        national_forecast = float(national[target_quarter])
+        # Compare against national HFCE for the same quarters the user's baseline came from.
+        baseline_quarters = [pd.Period(month, freq="M").asfreq("Q") for month in baseline_months]
+        if any(quarter not in national.index for quarter in baseline_quarters):
+            raise ValueError("forecast data is unavailable for the baseline months")
+        national_baseline = float(
+            np.average(national[baseline_quarters].to_numpy(), weights=baseline_weights)
+        )
         multiplier = national_forecast / national_baseline
         amount = user_baseline * multiplier
         logger.info(
             "forecast prediction user_id=%s category=%s baseline_php=%.2f "
-            "hfce_multiplier=%.6f final_amount_php=%.2f",
+            "baseline_quarters=%s national_baseline_million_php=%.2f "
+            "national_forecast_million_php=%.2f hfce_multiplier=%.6f final_amount_php=%.2f",
             user_id,
             category,
             user_baseline,
+            [str(quarter) for quarter in baseline_quarters],
+            national_baseline,
+            national_forecast,
             multiplier,
             amount,
         )

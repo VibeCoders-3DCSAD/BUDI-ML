@@ -32,15 +32,19 @@ The previous monthly, weekly, yearly, and batch forecast API is removed.
 For each requested category, the service:
 
 1. Excludes transactions after the current date and the in-progress calendar month.
-2. Calculates a recency-weighted average of the user's completed current-year monthly category totals.
+2. Calculates a recency-weighted average (weights 1, 2, 3, ...) of the user's monthly category totals for the last 12 completed months.
 3. Gets the HFCE category projection for the quarter containing the next calendar month.
-4. Divides that projection by the median of the artifact's four latest observed HFCE values.
+4. Divides that projection by the HFCE value of each baseline month's quarter, weighted with the same recency weights. Quarters after the artifact's last observation use the model's projection.
 5. Multiplies the user's baseline by that HFCE trend multiplier.
 
 ```text
-forecast_php = weighted_average(completed_user_category_months)
-               * (next_hfce_quarter_forecast / recent_hfce_baseline)
+forecast_php = weighted_average(user_month_totals, w)
+               * (hfce[next_month_quarter] / weighted_average(hfce[quarter_of(user_months)], w))
 ```
+
+Matching the denominator to the user's own baseline months means the multiplier
+scales the user's recent level to the target quarter. A September-only baseline,
+for example, is scaled by `hfce[Q4] / hfce[Q3]`.
 
 The response reports the user's baseline, the HFCE multiplier, and the national
 HFCE forecast amount so the result remains explainable.
@@ -48,7 +52,8 @@ HFCE forecast amount so the result remains explainable.
 ## Requirements And Limits
 
 - A request must include at least one expense transaction.
-- Each requested category needs expense history in at least one completed current-year month.
+- Each requested category needs expense history in at least one completed month within the last 12 months.
+- A category whose latest completed-month expense is 6 or more months old is not forecast.
 - The current month is excluded because it is incomplete.
 - HFCE is a population-level category trend, not an individual household forecast.
 - Sparse personal history results in a less representative baseline. The API does

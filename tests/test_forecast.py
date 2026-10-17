@@ -17,8 +17,8 @@ class _StubHfceModel:
 
     model = _Inner()
 
-    def forecast(self, _steps):
-        return [120.0]
+    def forecast(self, steps):
+        return [120.0] * steps
 
 
 def _tenth_of_month_before(months: int) -> str:
@@ -53,12 +53,14 @@ def test_forecast_rounds_final_amounts_half_up_to_whole_pesos():
 
 
 def test_seasonal_naive_hfce_artifact_forecasts_recursively():
-    history, forecast = forecast_service._hfce_history_and_forecast(
-        {"family": "seasonal_naive", "model": [100.0, 110.0, 90.0, 120.0]}, 5
+    series = forecast_service._hfce_quarterly_series(
+        {"family": "seasonal_naive", "model": [100.0, 110.0, 90.0, 120.0], "period_end": "2026Q2"}, 5
     )
 
-    assert history.tolist() == [100.0, 110.0, 90.0, 120.0]
-    assert forecast == 100.0
+    assert [str(quarter) for quarter in series.index] == [
+        "2025Q3", "2025Q4", "2026Q1", "2026Q2", "2026Q3", "2026Q4", "2027Q1", "2027Q2", "2027Q3"
+    ]
+    assert series["2027Q3"] == 100.0
 
 
 def test_forecast_returns_only_the_next_calendar_month_from_one_completed_month(caplog):
@@ -145,6 +147,29 @@ def test_forecast_excludes_partial_month_spend_from_its_baseline():
 
     assert points[0].user_baseline_amount == 2_333.33
     assert points[0].month == "2026-11"
+
+
+def test_forecast_multiplier_compares_against_the_baseline_months_quarters():
+    model = _food_model()
+    model.model["food"]["period_end"] = "2026Q2"  # endog = Q3'25 100, Q4'25 110, Q1'26 90, Q2'26 100
+    transactions = [_food_expense("2026-03-10", 1_000.0), _food_expense("2026-05-10", 2_500.0)]
+
+    points = forecast_service.forecast(model, transactions, ["food"], as_of=date(2026, 7, 7))
+
+    # national baseline = (Q1 90 * 1 + Q2 100 * 2) / 3; target Q3 forecast = 120
+    assert points[0].user_baseline_amount == 2_000.0
+    assert points[0].hfce_multiplier == 1.241379
+    assert points[0].amount == 2_483.0
+
+
+def test_forecast_multiplier_uses_projected_hfce_for_unobserved_baseline_quarters():
+    transactions = [_food_expense("2026-10-10", 2_000.0)]
+
+    points = forecast_service.forecast(_food_model(), transactions, ["food"], as_of=date(2026, 11, 5))
+
+    # October falls in 2026Q4, past the artifact's 2026Q3 end, so both sides use the Q4 projection
+    assert points[0].hfce_multiplier == 1.0
+    assert points[0].amount == 2_000.0
 
 
 def test_forecast_in_january_uses_last_years_completed_months():
