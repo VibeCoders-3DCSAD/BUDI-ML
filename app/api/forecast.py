@@ -37,6 +37,7 @@ async def predict(
             [transaction.model_dump() for transaction in request.historical_transactions],
             request.categories,
             user_id=request.user_id,
+            target_month=request.target_month,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

@@ -149,6 +149,32 @@ def test_forecast_excludes_partial_month_spend_from_its_baseline():
     assert points[0].month == "2026-11"
 
 
+def test_forecast_can_target_the_current_month_from_completed_months_only():
+    transactions = [
+        _food_expense("2026-09-10", 2_500.0),
+        _food_expense("2026-10-02", 100_000.0),
+    ]
+
+    points = forecast_service.forecast(
+        _food_model(), transactions, ["food"], as_of=date(2026, 10, 18), target_month="2026-10"
+    )
+
+    assert points[0].month == "2026-10"
+    assert points[0].quarter == "2026Q4"
+    assert points[0].user_baseline_amount == 2_500.0
+
+
+def test_forecast_rejects_a_past_target_month():
+    with pytest.raises(ValueError, match="cannot be in the past"):
+        forecast_service.forecast(
+            _food_model(),
+            [_food_expense("2026-08-10", 1_000.0)],
+            ["food"],
+            as_of=date(2026, 10, 18),
+            target_month="2026-09",
+        )
+
+
 def test_forecast_multiplier_compares_against_the_baseline_months_quarters():
     model = _food_model()
     model.model["food"]["period_end"] = "2026Q2"  # endog = Q3'25 100, Q4'25 110, Q1'26 90, Q2'26 100

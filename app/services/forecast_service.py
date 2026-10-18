@@ -83,9 +83,14 @@ def forecast(
     categories: list[str],
     as_of: date | None = None,
     user_id: str | None = None,
+    target_month: str | None = None,
 ) -> list[ForecastPoint]:
-    """Project each HFCE category for the next calendar month only."""
+    """Project each HFCE category for one month: the next calendar month unless one is given."""
     as_of = as_of or date.today()
+    current_month = pd.Period(as_of, freq="M")
+    target_month = pd.Period(target_month, freq="M") if target_month else current_month + 1
+    if target_month < current_month:
+        raise ValueError("forecast target month cannot be in the past")
     frame = transactions_to_frame(transactions)
     expenses = frame.loc[
         frame["transaction_type"].eq("expense") & frame["date"].dt.date.le(as_of)
@@ -93,7 +98,6 @@ def forecast(
     if expenses.empty:
         raise ValueError("forecast requires at least one expense transaction")
 
-    target_month = pd.Period(as_of, freq="M") + 1
     target_quarter = target_month.asfreq("Q")
     points = []
     for category in dict.fromkeys(categories):
@@ -122,7 +126,7 @@ def forecast(
         artifact_quarter = pd.Period(artifact["period_end"], freq="Q")
         forecast_steps = target_quarter.ordinal - artifact_quarter.ordinal
         if forecast_steps < 1:
-            raise ValueError("forecast data is unavailable for the next calendar month")
+            raise ValueError("forecast data is unavailable for the target month")
         national = _hfce_quarterly_series(artifact, forecast_steps)
         national_forecast = float(national[target_quarter])
         # Compare against national HFCE for the same quarters the user's baseline came from.
@@ -156,7 +160,7 @@ def forecast(
                 user_baseline_amount=round(user_baseline, 2),
                 hfce_multiplier=round(multiplier, 6),
                 hfce_forecast_amount_million_php=round(national_forecast, 2),
-                explanation=f"Next-month {category} plan based on your monthly baseline and HFCE trend.",
+                explanation=f"Monthly {category} plan based on your monthly baseline and HFCE trend.",
             )
         )
     return points
