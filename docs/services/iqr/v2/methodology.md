@@ -3,8 +3,8 @@
 ```json
 {
   "document-type": "system-spec",
-  "version": "2.3.0",
-  "date": "2026.10.11",
+  "version": "2.4.0",
+  "date": "2026.10.15",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
@@ -27,25 +27,25 @@ Earlier expense transactions for one user and category
 
 The system identifies statistical deviations from a user's historical behaviour. An alert does not mean that a transaction is fraudulent, irresponsible, or unauthorized.
 
+### Implementation Locations
+
+| Component | Location | Role |
+| :--- | :--- | :--- |
+| Production detector | `odin/apps/app/local-db/repositories/unusualSpending.ts` | Runs on-device in the Odin app when an expense is saved. Persists `ANOMALOUS` results to `anomaly_evaluations` and shows the unusual-spending alert. |
+| Recurring confirmation | `odin/apps/app/features/ledger/TransactionHistoryScreen.tsx`, `odin/apps/app/features/alerts/AnomalyAlertsScreen.tsx` | Alert response "I'll be making this spending frequently"; stored as `anomaly_evaluations.confirmed_recurring_at` and synced. |
+| App evaluation | `odin/scripts/evaluate-iqr-anomaly.ts` (`pnpm eval:iqr`) | Evaluates the production TypeScript detector. |
+| Reference detector | `odin-ml/app/services/anomaly_service.py` | Python reference of the same rule, used by `training/scripts/modeling/evaluate_personal_iqr.py`. It has no HTTP endpoint. |
+
 ---
 
 ## Production Data Boundary
 
 Every production anomaly decision is based only on the current user's chronologically earlier expense transactions in the candidate transaction's category.
 
-The ML service accepts the user identity only through `X-Odin-User-Id`; it does not accept a body
-`user_id`. The authenticated Odin API gateway must retrieve and scope the transaction history to
-that identity, set `X-Odin-History-Source: odin_api`, and HMAC-SHA256 sign
-`odin_api:<user_id>:<raw request body>` into `X-Odin-History-Signature` with the configured
-`ODIN_TRUSTED_HISTORY_SHARED_SECRET`. The ML service rejects unsigned or invalid payloads and is
-unavailable for anomaly scoring when that secret is not configured. Direct public access to these
-headers is not a trusted deployment boundary. The same signed-gateway boundary protects the PFP,
-forecast, and budget inference endpoints; health, readiness, and metrics remain unsigned for
-infrastructure probes.
-
-`/api/v1/anomaly/detect/batch` is a single-user convenience endpoint: every request in the batch
-is covered by the same signed identity and history source. A gateway processing several users must
-send separately signed calls for each user.
+Production detection runs on the user's device against the local Odin ledger. The history query is
+scoped to the signed-in `user_id` and selects only posted, non-deleted expense transactions with a
+positive amount from the previous twelve months (at most 5,000 transactions). No transaction
+history is sent to the ML service for anomaly scoring; the ML service exposes no anomaly endpoint.
 
 | Input | Permitted in production anomaly decision | Notes |
 | :--- | :---: | :--- |
@@ -75,7 +75,7 @@ n_(u,c) < 6 OR history_span_(u,c) < 3 calendar months
     -> anomaly alerts disabled for category c
 ```
 
-Where `n_(u,c)` is the usable prior expense-observation count for user `u` and category `c`. `history_span_(u,c)` is the elapsed period from the earliest eligible baseline transaction to the candidate transaction. The initial production requirement is at least six prior same-category expenses spanning at least three calendar months. This requirement must be revalidated experimentally before adjustment.
+Where `n_(u,c)` is the usable prior expense-observation count for user `u` and category `c`; isolated flagged transactions (see [Baseline Isolation of Flagged Transactions](#baseline-isolation-of-flagged-transactions)) are not counted. `history_span_(u,c)` is the elapsed period from the earliest eligible baseline transaction to the candidate transaction. The initial production requirement is at least six prior same-category expenses spanning at least three calendar months. This requirement must be revalidated experimentally before adjustment.
 
 For this rule, three calendar months means the candidate's `(year * 12 + month)` is at least
 three greater than the earliest earlier baseline expense's equivalent value. ISO date-only values
@@ -109,11 +109,11 @@ For user `u` and category `c`, the historical amount set is:
 A_(u,c) = {a_1, a_2, ..., a_n}
 ```
 
-The detector uses category-specific personal IQRs, `IQR_(u,c)`, rather than comparing categories with materially different expected scales, such as housing and transport. The baseline must contain only valid expense transactions ordered before the candidate transaction. Income, transfers, refunds, reversals, and non-positive amounts are excluded. Categories must be normalized to Odin's canonical category identifiers before baseline selection.
+The detector uses category-specific personal IQRs, `IQR_(u,c)`, rather than comparing categories with materially different expected scales, such as housing and transport. The baseline must contain only valid expense transactions ordered before the candidate transaction, excluding isolated flagged transactions. Income, transfers, refunds, reversals, and non-positive amounts are excluded. Categories must be normalized to Odin's canonical category identifiers before baseline selection. In the Odin app, the baseline category `c` is the transaction's subcategory identifier.
 
 ### Log Transformation
 
-Because transaction amounts may be positively skewed, the detector transforms each amount before computing quartiles:
+Because transaction amounts may be positively skewed, the detector transforms each amount, in pesos, before computing quartiles (the app stores centavos and divides by 100 first):
 
 ```text
 x_i = ln(1 + a_i)
@@ -138,7 +138,7 @@ L_(u,c) = Q1_(u,c) - 1.5 * IQR_(u,c)
 U_(u,c) = Q3_(u,c) + 1.5 * IQR_(u,c)
 ```
 
-Quartiles use NumPy's `linear` interpolation method.
+Quartiles use NumPy's `linear` interpolation method. The TypeScript detector implements the same interpolation, `Q(p) = x_(floor(h)) + (h - floor(h)) * (x_(ceil(h)) - x_(floor(h)))` with `h = (n - 1) * p` over the sorted values.
 
 The candidate transaction is anomalous when:
 
@@ -152,14 +152,20 @@ A_i_txn = 0 otherwise
 The detector may calculate a continuous severity for prioritization and explanation:
 
 ```text
-D_i_txn = max(L_(u,c) - x_i, 0, x_i - U_(u,c)) / (IQR_(u,c) + epsilon)
+D_i_txn = max(L_(u,c) - x_i, 0, x_i - U_(u,c)) / IQR_(u,c)
 ```
+
+Severity is only calculated when `IQR_(u,c) > 0`, so no `epsilon` term is needed.
 
 `D_i_txn = 0` means the transaction is within the personal historical range. Larger values indicate increasing distance beyond the applicable IQR fence.
 
 When `IQR_(u,c) = 0`, the detector must return an insufficient-variability state rather than treating every non-identical amount as anomalous. Severity is unavailable in this state.
 
-After scoring, every valid expense transaction, including a flagged transaction, is added to its user-category baseline. This permits the baseline to adapt when a user's spending pattern changes over time.
+### Baseline Isolation of Flagged Transactions
+
+After scoring, a valid expense transaction whose state is `NORMAL`, `INSUFFICIENT_HISTORY`, or `INSUFFICIENT_VARIABILITY` is added to its user-category baseline. A transaction whose state is `ANOMALOUS`, whether above the upper fence or below the lower fence, is isolated: it is not added to the baseline and does not affect the bounds of any later transaction.
+
+An isolated transaction enters the baseline only when the user confirms it with the response "I'll be making this spending frequently". The response is offered on the unusual-spending alert shown after the expense is saved and on the alert's detail view in Spending alerts. Confirming sets `anomaly_evaluations.confirmed_recurring_at`; this is the only mutable field of an evaluation and syncs as a versioned update. Choosing "Got it" leaves the transaction isolated. The confirmed transaction is then treated as a baseline member in its original `(t_i, id_i)` position for all later candidates. This lets the baseline adapt to a sustained change in spending, such as a rent increase, only by explicit user confirmation, and prevents unconfirmed unusual transactions from widening the IQR fences and masking later anomalies.
 
 ## Alert Language
 
@@ -173,9 +179,9 @@ The system must not claim that a transaction is fraudulent, that a user is spend
 
 ---
 
-## API Response Contract
+## Decision States and Persisted Contract
 
-Each evaluated transaction must return one of the following states:
+Each evaluated transaction resolves to one of the following states:
 
 | State | Meaning |
 | :--- | :--- |
@@ -184,12 +190,11 @@ Each evaluated transaction must return one of the following states:
 | `INSUFFICIENT_HISTORY` | The category has fewer than six prior valid expenses or less than three calendar months of prior history. |
 | `INSUFFICIENT_VARIABILITY` | The eligible category baseline has zero IQR. |
 
-Every response must include the canonical category, usable-history count, state, and amount-scale lower and upper bounds when bounds are available. Amount-scale bounds are calculated as `exp(L_(u,c)) - 1` and `exp(U_(u,c)) - 1`. Every `ANOMALOUS` or `NORMAL` response must include severity; severity is `0` for `NORMAL` and is unavailable for insufficient-history or insufficient-variability states.
+Amount-scale bounds are calculated as `exp(L_(u,c)) - 1` and `exp(U_(u,c)) - 1`, floored at `0`. A candidate strictly equal to either fence is `NORMAL`.
 
-Requests require globally unique, non-null `transaction_id` values and canonical lowercase
-category identifiers (`[a-z][a-z0-9_]*`). The response has `ruleset_version`
-`personal-transaction-iqr-v2.3.0`; lower bound, upper bound, and severity are all `null` for
-both insufficient states. A candidate strictly equal to either fence is `NORMAL`.
+The Odin app persists only `ANOMALOUS` decisions, as one `anomaly_evaluations` row per transaction with: `transaction_id`, `subcategory_id`, `amount_centavos`, `usable_history_count`, `usual_spending_centavos` (median of the baseline), `lower_bound_centavos`, `upper_bound_centavos`, `severity`, `model_version` `personal-transaction-iqr-local-v2.4.0`, `evaluated_at`, and `confirmed_recurring_at` (null until confirmed). Score fields are immutable once synced. `NORMAL` and insufficient states are not persisted or shown.
+
+The odin-ml reference detector returns every state for every expense with the canonical category, usable-history count, bounds and severity (`null` for both insufficient states; `0` for `NORMAL`), and `ruleset_version` `personal-transaction-iqr-v2.4.0`. It requires unique, non-null `transaction_id` values and canonical lowercase category identifiers (`[a-z][a-z0-9_]*`).
 
 ---
 
@@ -211,7 +216,7 @@ Historical observations
 `-- test: evaluate transaction anomaly detection
 ```
 
-For each test transaction, calculate bounds only from its earlier eligible history. The candidate transaction must not affect its own bounds; after scoring, every valid expense transaction is added to the baseline.
+Both evaluators, `odin/scripts/evaluate-iqr-anomaly.ts` and `odin-ml/training/scripts/modeling/evaluate_personal_iqr.py`, call their production or reference detector directly. For each test transaction, calculate bounds only from its earlier eligible history. The candidate transaction must not affect its own bounds. After scoring, every transaction the detector flags `ANOMALOUS` is isolated from the baseline; evaluation has no user confirmations, so no flagged transaction is ever re-included. Every other valid expense transaction, including an injected spike the detector missed, is added to the baseline.
 
 ### Transaction-Level Test Injection
 
@@ -248,7 +253,7 @@ F1-score  = 2 * TP / (2 * TP + FP + FN)
 
 Report the evaluated unit, positive-label definition, sample size, and injected-positive proportion with each metric set. Precision, Recall, and F1-score are primary because anomalous cases are uncommon; Accuracy is secondary. When a metric denominator is zero, report the metric as undefined or not estimable and state the reason rather than reporting a perfect score.
 
-Implementation tests must separately verify expense filtering, category scoping, timestamp and transaction-ID ordering, NumPy linear quartiles, log transformation, lower- and upper-fence equality, zero-IQR handling, baseline updates after scoring, and chronological leakage prevention. These checks establish mathematical correctness; the four classification metrics measure agreement with independently specified labels.
+Implementation tests must separately verify expense filtering, category scoping, timestamp and transaction-ID ordering, NumPy linear quartiles, log transformation, lower- and upper-fence equality, zero-IQR handling, baseline updates after scoring (isolation of flagged transactions and re-inclusion of user-confirmed recurring ones), and chronological leakage prevention. These checks establish mathematical correctness; the four classification metrics measure agreement with independently specified labels.
 
 ---
 

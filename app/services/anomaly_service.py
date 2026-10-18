@@ -14,7 +14,7 @@ from app.schemas.anomaly import (
     OverspendingTransaction,
 )
 
-RULESET_VERSION = "personal-transaction-iqr-v2.3.0"
+RULESET_VERSION = "personal-transaction-iqr-v2.4.0"
 MINIMUM_HISTORY = 6
 IQR_MULTIPLIER = 1.5
 logger = logging.getLogger(__name__)
@@ -111,8 +111,9 @@ def detect(transactions: list[AnomalyTransaction]) -> list[AnomalyDecision]:
                 decision.usable_history_count,
                 decision.severity,
             )
-        # Flagged and insufficient observations are future history, never candidate evidence.
-        history.append(transaction)
+        # Flagged observations stay isolated; evaluation has no user recurring confirmations.
+        if decision.state is not DecisionState.ANOMALOUS:
+            history.append(transaction)
     logger.info(
         "anomaly scoring complete inputs=%d scored=%d skipped_non_expenses=%d anomalous=%d normal=%d insufficient_history=%d insufficient_variability=%d",
         len(transactions),
