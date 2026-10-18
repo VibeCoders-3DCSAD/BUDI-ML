@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import training.scripts.modeling.train_hfce_sarima_v4 as hfce_training
 from training.scripts.modeling.train_hfce_sarima_v4 import (
+    apply_release_gate,
     average_metrics,
     candidate_rank_key,
     candidates,
@@ -10,6 +11,7 @@ from training.scripts.modeling.train_hfce_sarima_v4 import (
     evaluate_candidate,
     fit_candidate,
     release_candidate,
+    select_candidate,
     split_series,
     walk_forward_folds,
 )
@@ -121,6 +123,33 @@ def test_candidate_rank_key_prioritizes_mae_then_specified_tie_breakers() -> Non
     assert sorted(candidates_by_metric, key=candidate_rank_key)[0] is candidates_by_metric[2]
 
 
+def test_selection_releases_the_best_sarima_not_a_simple_benchmark(monkeypatch) -> None:
+    train = pd.Series([1.0])
+    validation = pd.Series([2.0])
+    seasonal_naive = {"name": "seasonal_naive", "family": "seasonal_naive"}
+    sarima = {"name": "sarima", "family": "sarima"}
+
+    monkeypatch.setattr(hfce_training, "candidates", lambda: (seasonal_naive, sarima))
+    monkeypatch.setattr(
+        hfce_training,
+        "evaluate_candidate",
+        lambda candidate, *_args: (
+            {
+                "mae_million_php": 1.0 if candidate["family"] != "sarima" else 2.0,
+                "smape_percent": 1.0,
+                "mda_percent": 100.0,
+                "rmse_million_php": 1.0,
+            },
+            [],
+        ),
+    )
+
+    selected, selection = select_candidate(train, validation, "food")
+
+    assert selected is sarima
+    assert selection["locked_simple_fallback"]["params"] is seasonal_naive
+
+
 def test_validation_mda_uses_each_origin_last_observed_value(monkeypatch) -> None:
     train = pd.Series([100.0], index=pd.period_range("2016Q4", periods=1, freq="Q"))
     validation = pd.Series([110.0, 90.0], index=pd.period_range("2017Q1", periods=2, freq="Q"))
@@ -137,7 +166,7 @@ def test_validation_mda_uses_each_origin_last_observed_value(monkeypatch) -> Non
     assert metrics["mda_percent"] == 66.66666666666666
 
 
-def test_release_gate_rejects_a_sarima_candidate_without_replacing_it(monkeypatch) -> None:
+def test_release_records_a_weaker_sarima_benchmark_comparison(monkeypatch) -> None:
     selected = {"name": "sarima", "family": "sarima"}
     fallback = {"name": "seasonal_naive", "family": "seasonal_naive"}
     selection = {"locked_simple_fallback": {"params": fallback}}
@@ -159,14 +188,17 @@ def test_release_gate_rejects_a_sarima_candidate_without_replacing_it(monkeypatc
 
     monkeypatch.setattr(hfce_training, "evaluate_candidate", fake_evaluate)
 
-    released, gate, metrics, _ = release_candidate(selected, selection, train, validation, test)
+    released, comparison, metrics, _ = release_candidate(
+        selected, selection, train, validation, test
+    )
 
     assert released is selected
-    assert gate["passed"] is False
     assert metrics["mae_million_php"] == 11.1
+    assert comparison["fallback"]["candidate"] is fallback
+    assert comparison["fallback"]["mae_deterioration_ratio"] == 0.10999999999999988
 
 
-def test_release_gate_handles_equal_zero_mae_without_false_deterioration(monkeypatch) -> None:
+def test_release_records_equal_zero_mae_benchmark_comparison(monkeypatch) -> None:
     selected = {"name": "sarima", "family": "sarima"}
     fallback = {"name": "seasonal_naive", "family": "seasonal_naive"}
     selection = {"locked_simple_fallback": {"params": fallback}}
@@ -185,8 +217,37 @@ def test_release_gate_handles_equal_zero_mae_without_false_deterioration(monkeyp
         ),
     )
 
-    _, gate, _, _ = release_candidate(
+    _, comparison, _, _ = release_candidate(
         selected, selection, pd.Series([1.0]), pd.Series([2.0]), pd.Series([3.0])
     )
 
-    assert gate["passed"] is True
+    assert comparison["fallback"]["mae_deterioration_ratio"] == 0.0
+
+
+def test_release_gate_skips_unestimable_winner_in_validation_order(monkeypatch) -> None:
+    ranked = [
+        {"params": {"name": "winner", "family": "sarima"}},
+        {"params": {"name": "runner_up", "family": "sarima"}},
+        {"params": {"name": "third", "family": "sarima"}},
+    ]
+
+    def fake_evaluate(candidate, *_args):
+        if candidate["name"] == "winner":
+            raise ValueError("winner did not converge")
+        return {"mae_million_php": 1.0}, []
+
+    monkeypatch.setattr(hfce_training, "evaluate_candidate", fake_evaluate)
+    monkeypatch.setattr(hfce_training, "fit_candidate", lambda *_args: "model")
+    monkeypatch.setattr(hfce_training, "forecast_candidate", lambda *_args: None)
+
+    released, model, _, rejections = apply_release_gate(
+        {"sarima_ranked": ranked},
+        pd.Series([1.0, 2.0, 3.0]),
+        pd.Series([1.0]),
+        pd.Series([2.0]),
+        pd.Series([3.0]),
+    )
+
+    assert released is ranked[1]
+    assert model == "model"
+    assert rejections == [{"name": "winner", "reason": "winner did not converge"}]

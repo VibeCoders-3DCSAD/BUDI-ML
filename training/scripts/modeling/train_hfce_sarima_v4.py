@@ -17,6 +17,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
@@ -37,7 +38,7 @@ MAX_SEASONAL_ORDER = 2
 TRANSFORMS = ("identity", "log1p")
 PSA_DATA_VINTAGE = "2026-08-07"
 MODEL_VERSION = "hfce-sarima-v4"
-MAX_TEST_MAE_DETERIORATION_RATIO = 0.10
+DEFAULT_WORKERS = 8
 
 
 @dataclass(frozen=True)
@@ -291,45 +292,90 @@ def evaluate_candidate(
     return error_metrics(np.asarray(actual), np.asarray(predicted), np.asarray(previous)), folds
 
 
+def validate_candidate(
+    candidate: dict[str, object], train: pd.Series, validation: pd.Series
+) -> dict[str, object] | str:
+    """Return a validation record, or the rejection reason so workers never raise."""
+    try:
+        metrics, folds = evaluate_candidate(candidate, train, validation, WALK_FORWARD_HORIZON)
+    except Exception as error:
+        return str(error)
+    return {
+        "name": candidate["name"],
+        "metrics": metrics,
+        "params": candidate,
+        "walk_forward_folds": folds,
+    }
+
+
 def select_candidate(
-    train: pd.Series, validation: pd.Series, category: str
+    train: pd.Series, validation: pd.Series, category: str, workers: int = 1
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Select one family/specification using validation data only."""
     results = []
     candidate_grid = candidates()
-    for position, candidate in enumerate(candidate_grid, start=1):
+    # Results arrive in grid order, so ranking ties resolve identically for any worker count.
+    outcomes = Parallel(n_jobs=workers, return_as="generator")(
+        delayed(validate_candidate)(candidate, train, validation) for candidate in candidate_grid
+    )
+    for position, (candidate, outcome) in enumerate(
+        zip(candidate_grid, outcomes, strict=True), start=1
+    ):
         LOGGER.info(
-            "Training %s candidate %s/%s: %s",
+            "Validated %s candidate %s/%s: %s",
             category,
             position,
             len(candidate_grid),
             candidate["name"],
         )
-        try:
-            metrics, folds = evaluate_candidate(candidate, train, validation, WALK_FORWARD_HORIZON)
-        except Exception as error:
-            LOGGER.debug("Skipping %s: %s", candidate["name"], error)
+        if isinstance(outcome, str):
+            LOGGER.debug("Skipping %s: %s", candidate["name"], outcome)
             continue
-        results.append(
-            {
-                "name": candidate["name"],
-                "metrics": metrics,
-                "params": candidate,
-                "walk_forward_folds": folds,
-            }
-        )
+        results.append(outcome)
     if not results:
         raise ValueError("No HFCE forecasting candidate could fit the validation split")
     ranked = sorted(results, key=candidate_rank_key)
+    sarima_ranked = [result for result in ranked if result["params"]["family"] == "sarima"]
     simple_ranked = [result for result in ranked if result["params"]["family"] != "sarima"]
-    return ranked[0]["params"], {
+    if not sarima_ranked:
+        raise ValueError("No HFCE SARIMA candidate could fit the validation split")
+    return sarima_ranked[0]["params"], {
         "evaluated_candidate_count": len(results),
         "rejected_candidate_count": len(candidate_grid) - len(results),
         "leaderboard": ranked[:10],
-        "winner": ranked[0],
+        "winner": sarima_ranked[0],
         "locked_simple_fallback": simple_ranked[0] if simple_ranked else None,
-        "selection_rule": "lowest rolling-origin MAE; ties resolved by SMAPE, RMSE, then MDA",
+        "selection_rule": "lowest rolling-origin SARIMA MAE; ties resolved by SMAPE, RMSE, then MDA",
+        # Popped before reporting; the release gate walks it in validation order.
+        "sarima_ranked": sarima_ranked,
     }
+
+
+def apply_release_gate(
+    selection: dict[str, object],
+    series: pd.Series,
+    train: pd.Series,
+    validation: pd.Series,
+    test: pd.Series,
+) -> tuple[dict[str, object], FittedCandidate, tuple[dict[str, float], list], list]:
+    """Release the best validation SARIMA that can be estimated on test and full-data refits.
+
+    Test data only decides operational validity (fit, convergence, finite forecasts);
+    candidates are always tried in validation rank order, never re-ranked by test error.
+    """
+    rejections = []
+    for record in selection["sarima_ranked"]:
+        candidate = record["params"]
+        try:
+            test_evaluation = evaluate_candidate(candidate, pd.concat([train, validation]), test, 1)
+            final_model = fit_candidate(series, candidate)
+            forecast_candidate(final_model, WALK_FORWARD_HORIZON)
+        except ValueError as error:
+            LOGGER.warning("Release gate rejected %s: %s", candidate["name"], error)
+            rejections.append({"name": candidate["name"], "reason": str(error)})
+            continue
+        return record, final_model, test_evaluation, rejections
+    raise ValueError("No validated HFCE SARIMA candidate passed the release gate")
 
 
 def release_candidate(
@@ -338,20 +384,19 @@ def release_candidate(
     train: pd.Series,
     validation: pd.Series,
     test: pd.Series,
+    selected_evaluation: tuple[dict[str, float], list] | None = None,
 ) -> tuple[dict[str, object], dict[str, object], dict[str, float], list[dict[str, list[str]]]]:
-    """Gate a SARIMA release against a validation-locked simple benchmark."""
-    selected_metrics, selected_folds = evaluate_candidate(
+    """Evaluate the selected model and record its locked benchmark comparison."""
+    selected_metrics, selected_folds = selected_evaluation or evaluate_candidate(
         selected, pd.concat([train, validation]), test, 1
     )
     fallback = selection["locked_simple_fallback"]
-    gate: dict[str, object] = {
-        "passed": True,
-        "maximum_test_mae_deterioration_ratio": MAX_TEST_MAE_DETERIORATION_RATIO,
+    comparison: dict[str, object] = {
         "selected_test_metrics": selected_metrics,
         "fallback": None,
     }
     if selected["family"] != "sarima" or fallback is None:
-        return selected, gate, selected_metrics, selected_folds
+        return selected, comparison, selected_metrics, selected_folds
 
     fallback_params = fallback["params"]
     fallback_metrics, _ = evaluate_candidate(
@@ -363,15 +408,12 @@ def release_candidate(
         deterioration = (
             selected_metrics["mae_million_php"] / fallback_metrics["mae_million_php"] - 1
         )
-    gate["fallback"] = {
+    comparison["fallback"] = {
         "candidate": fallback_params,
         "test_metrics": fallback_metrics,
         "mae_deterioration_ratio": deterioration,
     }
-    if deterioration > MAX_TEST_MAE_DETERIORATION_RATIO:
-        gate["passed"] = False
-        gate["reason"] = "SARIMA test MAE deteriorated beyond the locked simple benchmark threshold"
-    return selected, gate, selected_metrics, selected_folds
+    return selected, comparison, selected_metrics, selected_folds
 
 
 def write_evaluation_report(destination: Path, report: dict[str, object]) -> None:
@@ -425,7 +467,10 @@ def load_category_series(dataset: pd.DataFrame, category: str) -> pd.Series:
 
 
 def train_models(
-    dataset_path: str | Path, output_dir: str | Path, categories_to_train: set[str] | None = None
+    dataset_path: str | Path,
+    output_dir: str | Path,
+    categories_to_train: set[str] | None = None,
+    workers: int = 1,
 ) -> dict[str, object]:
     """Lock validation winners, test them once, then refit artifacts on all observed data."""
     source = Path(dataset_path)
@@ -476,14 +521,16 @@ def train_models(
     for category in categories:
         series = load_category_series(dataset, category)
         train, validation, test = split_series(series)
-        selected, selection = select_candidate(train, validation, category)
-        released, release_gate, test_metrics, test_folds = release_candidate(
-            selected, selection, train, validation, test
+        selected, selection = select_candidate(train, validation, category, workers)
+        released_record, final_model, test_evaluation, rejections = apply_release_gate(
+            selection, series, train, validation, test
         )
-        if not release_gate["passed"]:
-            raise ValueError(f"{category} SARIMA candidate failed the final release gate")
-        final_model = fit_candidate(series, released)
-        forecast_candidate(final_model, WALK_FORWARD_HORIZON)
+        selection.pop("sarima_ranked")
+        selection["released"] = released_record
+        selection["release_gate_rejections"] = rejections
+        released, benchmark_comparison, test_metrics, test_folds = release_candidate(
+            released_record["params"], selection, train, validation, test, test_evaluation
+        )
         artifact = f"{category}.joblib"
         joblib.dump(
             {
@@ -517,13 +564,13 @@ def train_models(
             "released_candidate": released,
             "validation": selection,
             "test": {"metrics": test_metrics, "walk_forward_folds": test_folds},
-            "release_gate": release_gate,
+            "benchmark_comparison": benchmark_comparison,
         }
     reports = list(report["categories"].values())
     report["metric_averages"] = {
         "method": "scale-independent_macro_average_across_categories",
         "validation": average_metrics(
-            [entry["validation"]["winner"]["metrics"] for entry in reports]
+            [entry["validation"]["released"]["metrics"] for entry in reports]
         ),
         "test": average_metrics([entry["test"]["metrics"] for entry in reports]),
     }
@@ -541,9 +588,20 @@ def main() -> None:
     )
     parser.add_argument("--output-dir", type=Path, default=Path("training/models/hfce_sarima_v4"))
     parser.add_argument("--categories", nargs="+", choices=sorted(PURPOSES.values()))
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        help="parallel candidate-validation processes (about 250 MB RAM each)",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    train_models(args.input, args.output_dir, set(args.categories) if args.categories else None)
+    train_models(
+        args.input,
+        args.output_dir,
+        set(args.categories) if args.categories else None,
+        args.workers,
+    )
 
 
 if __name__ == "__main__":

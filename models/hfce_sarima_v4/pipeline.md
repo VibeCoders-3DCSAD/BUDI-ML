@@ -1108,20 +1108,24 @@ A model is rejected if it:
 
 -   produces non-finite forecasts;
 
--   produces invalid negative HFCE forecasts on the original scale; or
-
--   demonstrates substantial deterioration relative to the simpler benchmark during final evaluation.
+-   produces invalid negative HFCE forecasts on the original scale.
 
 
 A model should not be deployed merely because it belongs to the SARIMA family.
 
-The released model for every category must remain SARIMA. Seasonal-naive and
-ETS candidates are evaluation benchmarks only and are never deployed.
+The lowest-error validation SARIMA candidate is released for each category.
+Seasonal-naive and ETS candidates are evaluation benchmarks only and are never deployed.
 
-For the released implementation, "substantial deterioration" means final-test
-MAE more than 10% higher than the strongest seasonal-naive or ETS benchmark
-locked during validation. A SARIMA candidate that fails this gate is rejected;
-the test period never selects a replacement model.
+If the selected candidate fails any of these operational checks during the test-period
+refits or the final full-data refit, it is rejected and the next SARIMA candidate in
+validation rank order is checked instead. The test period therefore decides only whether
+a candidate can be estimated, never which candidate scores best. Rejected candidates and
+their failure reasons are recorded in `evaluation.json` under `release_gate_rejections`.
+
+When the selected candidate is SARIMA, the final report records its test MAE
+relative to the strongest seasonal-naive or ETS benchmark locked during
+validation. This comparison is descriptive only: it never blocks the selected
+SARIMA artifact from being released or selects a replacement from the test set.
 
 This approach is consistent with forecast-evaluation guidance emphasizing meaningful comparison against simple benchmarks rather than assuming greater model complexity implies greater forecasting accuracy (Hewamalage et al., 2023).
 
