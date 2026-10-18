@@ -3,8 +3,8 @@
 ```json
 {
   "document-type": "worked-example",
-  "version": "1.0.0",
-  "date": "2026.09.17",
+  "version": "1.1.0",
+  "date": "2026.10.16",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
@@ -18,7 +18,7 @@
 | Classification (PFP) | `tier3_svm` (RBF SVM + Platt), with a questionnaire cold start and a Tier-1 rule fallback | Features, three-axis rules, questionnaire mapping. Full SVM kernel over 2,161 support vectors is not hand-complete; a 2-vector kernel step is included so the served formula is still executable. |
 | Forecasting v2 | Pooled `SARIMA(1,1,0)(1,0,0,12)` in `models/forecaster_v2/` | One-step pooled forecast from the committed coefficients, then peso rescaling. |
 | Anomaly alerts | `tier1_iqr` (1.5×IQR on 24 standardized features) | Quartiles, bounds, flag count, score, threshold. |
-| Budgeting | `scipy.optimize.linprog` (HiGHS) | Write the LP, bind FIXED/MINIMUM/FLEXIBLE constraints, recover the unique optimum on a 4-category instance. |
+| Budgeting | Two-stage continuous LP, `scipy.optimize.linprog` (HiGHS) | Build bounds from FIXED/MINIMUM/FLEXIBLE and targets, run Essential coverage then Essential-first allocation, recover the optimum on two small instances. |
 
 Companion documents: full pipeline walkthrough in [`pen-and-paper-simulation.md`](pen-and-paper-simulation.md); v2 training note in [`docs/services/forecast/v2/methodology.md`](../../docs/services/forecast/v2/methodology.md).
 
@@ -485,109 +485,134 @@ On the real 24-feature detector the same phone-shaped `frequency_change` example
 
 ---
 
-## 4. Budgeting (linear program)
+## 4. Budgeting (two-stage linear program)
 
-**What it does.** Splits `available_funds` across categories. There is no training. Same inputs always produce the same allocation (`app/services/budget_service.py`).
+**What it does.** Splits `available_funds` across categories for one month. There is no training. Same inputs always produce the same allocation (`app/services/budget_service.py`). Both stages are continuous LPs solved by `scipy.optimize.linprog(..., method="highs")`. Allocations keep centavo precision; nothing is rounded to whole pesos or ₱10 units. Money that no category can absorb stays as `unallocated_surplus`.
 
-### 4.1 Algorithm — write the LP
+### 4.1 Algorithm — two LPs
 
-**Decision variables** (two per category `i = 1 … n`):
-
-- `x_i` — pesos allocated to category `i`
-- `d_i ≥ 0` — absolute deviation from that category's target
-
-**Target.** `t_i = available_funds × target_ratio_i`. Missing ratios count as 0.
+**Decision variables.** `x_i ≥ 0` — pesos allocated to category `i` (continuous). Stage 1 adds one coverage level `r ≥ 0`.
 
 **Weights.** `w_i = max(priority_weight_i, 10⁻⁹)` so a zero weight cannot drop a category from the objective.
 
-**Objective.**
+**Target.** `t_i` = the category's forecast amount when an expense forecast is supplied, otherwise `available_funds × target_ratio_i`. Missing ratios count as 0, so a category with no forecast and no ratio is capped at its floor.
 
-```text
-minimize   Σ_i  w_i d_i
-```
+**Step 1 — bounds `[l_i, U_i]` from restriction level.** The target only caps discretionary allocation; it never lowers a hard floor.
 
-**Always-on constraints.**
-
-```text
-Σ_i x_i  =  available_funds
-d_i ≥ x_i − t_i
-d_i ≥ t_i − x_i
-d_i ≥ 0
-```
-
-In matrix form the two deviation inequalities are `x_i − d_i ≤ t_i` and `−x_i − d_i ≤ −t_i`.
-
-**Bounds from restriction level.**
-
-| Level | Bound on `x_i` | Meaning |
+| Level | `l_i` | `U_i` |
 | :--- | :--- | :--- |
-| `FIXED` | `x_i = floor = ceiling` | Exact configured amount; cannot move |
-| `MINIMUM` | `floor ≤ x_i ≤ ceiling` | Cannot go below the configured floor |
-| `FLEXIBLE` | `floor ≤ x_i ≤ ceiling` | Optimizer may move inside the box, including to zero |
+| `FIXED` | floor (= ceiling) | floor |
+| `MINIMUM` | floor | `max(floor, min(ceiling, t_i))` |
+| `FLEXIBLE` | floor | `max(floor, min(ceiling, t_i))` |
 
-**Solve.** HiGHS simplex / interior-point. On paper, bind the FIXED equalities first, meet every target that still fits inside its bounds, and assign any residual pesos to the lowest-weight category that still has unused ceiling.
+**Step 2 — feasibility check.** If `Σ l_i > available_funds`, return `INFEASIBLE` with `required_funds = Σ l_i`, the shortfall, and every category with `l_i > 0`. Fixed or Minimum rules are never relaxed. Nothing is solved.
 
-**Feasibility label** (after a successful solve):
+**Step 3 — Stage 1: Essential coverage.** For every Essential category with room (`U_i > l_i`), set the weighted gap `g_i = w_i (U_i − l_i)`. Solve:
 
-| Status | Test |
-| :--- | :--- |
-| `INFEASIBLE` | no allocation satisfies every hard constraint; the response identifies the shortfall and affected categories |
-| `FEASIBLE` | constraints hold and utilization ≈ 1 |
+```text
+maximize   r
+subject to x_i ≥ l_i + r g_i      (each Essential with room)
+           l_i ≤ x_i ≤ U_i        (every category)
+           Σ_i x_i ≤ available_funds
+```
 
-### 4.2 Worked example
+Each Essential's Stage-1 `x_i` becomes its new floor. This stops one heavy Essential from taking all scarce funds while another Essential stays at its floor. If no Essential has room, skip this stage.
 
-Funds = ₱25,000. Four categories (this is the payload in `tests/test_budget.py`).
+**Step 4 — Stage 2: Essential-first allocation.** Keep the raised Essential floors. Let `P = Σ_i w_i U_i + 1` and `I_i = 1` for Essential, else 0. Solve:
 
-| Category | Level | floor | ceiling | current | weight | ratio | target `t` |
-| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| food | MINIMUM | 6,000 | 9,000 | 6,800 | 0.4 | 0.28 | 7,000 |
-| rent | FIXED | 8,000 | 8,000 | 8,000 | 0.3 | 0.32 | 8,000 |
-| leisure | FLEXIBLE | 0 | 5,000 | 2,000 | 0.2 | 0.15 | 3,750 |
-| savings | FLEXIBLE | 0 | 6,000 | 0 | 0.1 | 0.25 | 6,250 |
+```text
+maximize   Σ_i (w_i + P·I_i) x_i
+subject to l_i' ≤ x_i ≤ U_i       (l_i' = Stage-1 floor for Essentials, l_i otherwise)
+           Σ_i x_i ≤ available_funds
+```
+
+Because `P` exceeds any possible weighted Non-essential total, every Essential peso is funded before any Non-essential peso. Among Non-essentials, higher `w_i` fills first.
+
+**On paper.** Stage 1: raise `r` until the first Essential hits its cap or the funds run out. Stage 2: fill remaining Essential room, then Non-essentials in descending weight, each up to `U_i`, until funds run out.
+
+**Step 5 — outputs.**
+
+```text
+utilization_rate      = Σ x_i / available_funds          (rounded to 4 dp)
+unallocated_surplus   = available_funds − Σ x_i          (rounded to 2 dp)
+constraint_satisfaction = 1.0 if every x_i is in [floor, ceiling] and FIXED x_i = floor, else 0.0
+feasibility           = FEASIBLE if constraint_satisfaction = 1.0
+```
+
+The returned allocation amounts are the raw solver values; they are not rounded.
+
+### 4.2 Worked example A — surplus left unallocated
+
+Funds = ₱25,000. Four categories (this is the payload in `tests/test_budget.py`). No forecast, so targets come from ratios.
+
+| Category | Group | Level | floor | ceiling | weight | ratio | target `t` |
+| :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| food | Essential | MINIMUM | 6,000 | 9,000 | 0.4 | 0.28 | 7,000 |
+| rent | Essential | FIXED | 8,000 | 8,000 | 0.3 | 0.32 | 8,000 |
+| leisure | Non-essential | FLEXIBLE | 0 | 5,000 | 0.2 | 0.15 | 3,750 |
+| savings | Non-essential | FLEXIBLE | 0 | 6,000 | 0.1 | 0.25 | 6,250 |
 
 **Step 1 — bounds**
 
 ```text
-food:    lo = 6,000,   hi = 9,000
-rent:    lo = hi = 8,000
-leisure: [0, 5,000]
-savings: [0, 6,000]
+food:    [6,000, min(9,000, 7,000)] = [6,000, 7,000]
+rent:    [8,000, 8,000]
+leisure: [0, min(5,000, 3,750)]     = [0, 3,750]
+savings: [0, min(6,000, 6,250)]     = [0, 6,000]
 ```
 
-**Step 2 — reserve FIXED rent**
+**Step 2 — feasibility.** `Σ l_i = 14,000 ≤ 25,000` → continue.
+
+**Step 3 — Stage 1.** Only food is an Essential with room (rent is fixed). `g_food = 0.4 × 1,000 = 400`. `x_food = 6,000 + 400r ≤ 7,000` gives `r = 2.5`, and funds are not binding. Food's new floor is 7,000.
+
+**Step 4 — Stage 2.** Essentials are now locked: food 7,000 + rent 8,000 = 15,000. Remaining 10,000. Non-essential capacity is 3,750 + 6,000 = 9,750 < 10,000, so both fill to their caps.
 
 ```text
-x_food + x_leisure + x_savings = 25,000 − 8,000 = 17,000
+x = (food 7,000,  rent 8,000,  leisure 3,750,  savings 6,000)
+Σ x = 24,750
 ```
 
-Unconstrained targets on those three sum to 7,000 + 3,750 + 6,250 = 17,000, but savings' ceiling is 6,000, so the ₱6,250 savings target is infeasible. Bind savings at 6,000 (`d_savings = 250`). Remaining ₱11,000 must cover food (target 7,000) and leisure (target 3,750). That is ₱250 extra.
-
-**Step 3 — where the extra ₱250 goes**
-
-Putting it on food costs `0.4 × 250 = 100`. Putting it on leisure costs `0.2 × 250 = 50`. Leisure is cheaper, and 3,750 + 250 = 4,000 is still under the 5,000 ceiling.
+**Step 5 — verify**
 
 ```text
-x = (food 7,000,  rent 8,000,  leisure 4,000,  savings 6,000)
-d = (0,            0,          250,            250)
-objective = 0.2×250 + 0.1×250 = 75
+food in [6000, 9000], rent = 8000, leisure in [0, 5000], savings in [0, 6000]   ✓
+utilization        = 24,750 / 25,000 = 0.99
+unallocated_surplus = 250
 ```
 
-**Step 4 — verify**
+**Boxed answer:** `(7,000, 8,000, 3,750, 6,000)`, surplus **₱250**, utilization **0.99**, status **FEASIBLE**. The ₱250 is not pushed into any category, because every category is already at its target cap.
+
+### 4.3 Worked example B — scarce funds shared between Essentials
+
+Funds = ₱6,000. Target ratios: food 1.0, transport 0.5, leisure 0.5.
+
+| Category | Group | Level | floor | ceiling | weight | target `t` | `U_i` |
+| :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| food | Essential | MINIMUM | 3,000 | 6,000 | 0.6 | 6,000 | 6,000 |
+| transport | Essential | FLEXIBLE | 1,000 | 3,000 | 0.2 | 3,000 | 3,000 |
+| leisure | Non-essential | FLEXIBLE | 0 | 2,000 | 0.2 | 3,000 | 2,000 |
+
+**Step 2.** `Σ l_i = 4,000 ≤ 6,000` → continue.
+
+**Step 3 — Stage 1.**
 
 ```text
-sum x              = 25,000                         ✓
-rent fixed         = 8,000                          ✓
-food in [6000, 9000]                                ✓
-leisure in [0, 5000]                                ✓
-savings in [0, 6000]                                ✓
-d_i = |x_i − t_i|                                   ✓
+g_food      = 0.6 × (6,000 − 3,000) = 1,800
+g_transport = 0.2 × (3,000 − 1,000) =   400
+
+funds:  (3,000 + 1,800r) + (1,000 + 400r) ≤ 6,000   →  r ≤ 2,000 / 2,200 = 10/11
+caps:   food r ≤ 3,000/1,800 = 1.667;  transport r ≤ 2,000/400 = 5
+r = 10/11 ≈ 0.909091   (funds bind first)
+
+x_food      = 3,000 + 1,800 × 10/11 = 4,636.363636…
+x_transport = 1,000 +   400 × 10/11 = 1,363.636363…
 ```
 
-Utilization = 1.0, constraint satisfaction = 1.0 → **FEASIBLE**. HiGHS returns this same point.
+**Step 4 — Stage 2.** The two Essential floors already use all ₱6,000, so leisure gets 0.
 
-**Boxed answer:** `(7,000, 8,000, 4,000, 6,000)`, status **FEASIBLE**, objective **75**.
+**Boxed answer:** `(4,636.363636…, 1,363.636363…, 0)`, surplus **0**, utilization **1.0**, status **FEASIBLE**. Without Stage 1, the higher-weight food would take all ₱2,000 above the floors and leave transport at ₱1,000. The amounts are returned unrounded (`4636.363636363636`, `1363.636363636364`), which is why the API keeps centavo-level and finer precision.
 
-If the solver cannot find any `x` inside the bounds that sums to funds, the service returns a structured `INFEASIBLE` recommendation. It never relaxes Fixed or Minimum rules.
+If `Σ l_i` had exceeded the funds, the service would instead return a structured `INFEASIBLE` recommendation. It never relaxes Fixed or Minimum rules.
 
 ---
 
@@ -608,8 +633,10 @@ If the solver cannot find any `x` inside the bounds that sums to funds, the serv
 | IQR score | flags / 24 | `IQRDetector.score` |
 | IQR threshold | 0.125 | `models/anomaly/metadata.json` |
 | Anomaly decision rule | ML must reach PR-AUC `≥ 1.5×IQR` and `≥ 0.15` on test, else IQR | fallback fired |
-| Budget solver | `linprog(..., method="highs")` | `budget_service.py` |
-| Budget objective | `Σ w_i \|x_i − t_i\|` | same |
+| Budget solver | `linprog(..., method="highs")`, two stages, continuous `x_i` | `budget_service.py` |
+| Budget Stage 1 | maximize `r` s.t. Essential `x_i ≥ l_i + r·w_i(U_i − l_i)` | same |
+| Budget Stage 2 | maximize `Σ (w_i + P·I_i) x_i`, `P = Σ w_i U_i + 1` | same |
+| Budget rounding | none (raw solver values) | same |
 | Debt in summaries | `0.10 × monthly expenses` | `build_monthly_summaries` |
 
 ---
@@ -620,4 +647,5 @@ If the solver cannot find any `x` inside the bounds that sums to funds, the serv
 - Forecast confidence bands are multiplicative service conventions, not SARIMA analytic intervals.
 - The IQR detector is univariate. It does not model feature interactions.
 - The budget LP is single-period. It does not plan across months.
+- The budget LP does not force leftover funds into a category; anything above every cap is reported as `unallocated_surplus`.
 - v2 forecast metrics are not a controlled bake-off against v1: horizon, fold count, and the expense generator all changed together.

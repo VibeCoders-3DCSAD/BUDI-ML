@@ -11,7 +11,7 @@
 | Need | Go to |
 | :--- | :--- |
 | Project overview, setup, and usage | `README.md` |
-| Pen-and-paper algorithms (PFP, forecast v2, IQR, MILP) | `training/docs/pen-and-paper-algorithms.md` |
+| Pen-and-paper algorithms (PFP, forecast v2, IQR, budget LP) | `training/docs/pen-and-paper-algorithms.md` |
 | FastAPI service code (endpoints, models, schemas) | `app/` |
 | Run the test suite | `tests/` (run `pytest`) |
 | Model training pipeline and phase docs | `training/` |
@@ -49,7 +49,7 @@
 | Path | Purpose |
 | :--- | :--- |
 | `app/main.py` | FastAPI entrypoint. |
-| `app/api/` | Route modules (health, pfp, forecast, anomaly, budget). |
+| `app/api/` | Route modules (health, classification, pfp, forecast, budget). |
 | `app/services/` | Inference and business logic. |
 | `app/models/` | Model loading and artifact registry. |
 | `app/schemas/` | Pydantic request and response models. |
@@ -59,7 +59,7 @@
 
 ## tests/
 
-Pytest coverage for the serving API (health, PFP, forecast, anomaly, budget). See `conftest.py` for shared fixtures. Run with `pytest`.
+Pytest coverage for the serving API (health, PFP, forecast, budget) and the personal IQR evaluation. See `conftest.py` for shared fixtures. Run with `pytest`.
 
 ---
 
@@ -85,7 +85,7 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | :--- | :--- |
 | `training/scripts/{data,pipeline,modeling,analysis,shared}/` | Data preparation, pipeline, modeling, analysis, and shared-script modules. |
 | `training/docs/` | ML design documents (data collection, EDA, dimension discovery). |
-| `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, Financial Planning Management MILP. |
+| `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, Financial Planning Management LP. |
 | `training/docs/pen-and-paper-simulation.md` | End-to-end pipeline simulation from a FIES row through one persona. |
 | `training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md` | FIES-anchored, HFCE-calibrated temporal disaggregation methodology. |
 | `training/docs/data-collection/synthetic-generation-v2.md` | Synthetic Generation v2 operator runbook (parallel pipeline; v1 untouched). |
@@ -109,10 +109,10 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | `docs/services/forecast/v1/overview.md` | Plain-language serving explanation; v1 evaluation figures. |
 | `docs/services/forecast/v2/methodology.md` | HFCE-calibrated v2 training note: empirical backing, SARIMA vs ARIMA, 2026-09-17 metrics. |
 | `docs/services/forecast/v3/methodology.md` | Unserved survey-only v3 forecast pipeline and external-validation release gate. |
-| `docs/services/iqr/v2/methodology.md` | Served V2 personal transaction-IQR anomaly rule and evaluation-only corpus contract. |
+| `docs/services/iqr/v2/methodology.md` | V2 personal transaction-IQR anomaly rule (served on-device by the Odin app) and evaluation-only corpus contract. |
 | `docs/services/classification/v2/specification.md` | Deterministic financial classification rules, service contract, input sources, and literature provenance. |
 | `docs/services/recommend/v3/financial-plan-integration.md` | Current Financial Plan classification and optional-surplus integration contract. |
-| `docs/services/recommend/v4/methodology.md` | Financial Planning Management MILP formulation and serving contract. |
+| `docs/services/recommend/v4/methodology.md` | Financial Planning Management two-stage LP formulation and serving contract. |
 | `docs/services/recommend/v2/optimizer.md` | Historical budget-recommendation optimizer constraints and allocation strategy. |
 | `docs/models/model-candidate-roster.md` | RRL-grounded candidate algorithms per model family. |
 | `docs/standards/REPOSITORY-STANDARDS.md` | Enforceable Python/ML engineering standards. |
