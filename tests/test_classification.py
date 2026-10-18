@@ -7,6 +7,7 @@ def _payload(**overrides):
     payload = {
         "request_id": "classification-1",
         "user_id": "test-user-1",
+        "classification_as_of": "2026-01-01",
         "liquid_emergency_savings": 3_000,
         "average_monthly_recurring_essential_expenses": 1_000,
         "monthly_disposable_income": 10_000,
@@ -78,3 +79,58 @@ def test_classification_requires_twelve_consecutive_card_cycles(client):
     assert response.status_code == 200
     assessment = response.json()["classification"]["credit_card_behavior"][0]
     assert assessment["status"] == "INSUFFICIENT_HISTORY"
+
+
+def test_classification_rejects_a_stale_card_history_window(client):
+    cycles = [
+        {"completed_on": f"2024-{month:02d}-28", "revolving_balance": 0} for month in range(1, 13)
+    ]
+    response = trusted_post(
+        client,
+        "/api/v1/classification/v2",
+        _payload(credit_card_accounts=[{"account_id": "card-1", "cycles": cycles}]),
+    )
+    assert response.status_code == 200
+    assessment = response.json()["classification"]["credit_card_behavior"][0]
+    assert assessment["status"] == "INSUFFICIENT_HISTORY"
+
+
+def test_classification_scores_self_reported_card_behavior(client):
+    for months, label in ((0, "TRANSACTOR"), (5, "LIGHT_REVOLVER"), (12, "HEAVY_REVOLVER")):
+        response = trusted_post(
+            client,
+            "/api/v1/classification/v2",
+            _payload(self_reported_revolving_months=months),
+        )
+        assert response.status_code == 200
+        [assessment] = response.json()["classification"]["credit_card_behavior"]
+        assert assessment["source"] == "self_reported"
+        assert assessment["status"] == "SUCCESS"
+        assert assessment["label"] == label
+        assert assessment["value"] == months
+
+
+def test_classification_prefers_observed_card_history_over_self_report(client):
+    cycles = [
+        {"completed_on": f"2025-{month:02d}-28", "revolving_balance": 0} for month in range(1, 13)
+    ]
+    response = trusted_post(
+        client,
+        "/api/v1/classification/v2",
+        _payload(
+            credit_card_accounts=[{"account_id": "card-1", "cycles": cycles}],
+            self_reported_revolving_months=12,
+        ),
+    )
+    [assessment] = response.json()["classification"]["credit_card_behavior"]
+    assert assessment["source"] == "observed_history"
+    assert assessment["label"] == "TRANSACTOR"
+
+
+def test_classification_rejects_out_of_range_self_report(client):
+    response = trusted_post(
+        client,
+        "/api/v1/classification/v2",
+        _payload(self_reported_revolving_months=13),
+    )
+    assert response.status_code == 422

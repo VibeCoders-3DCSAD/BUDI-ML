@@ -26,7 +26,7 @@ Each response records the calculation inputs, applied threshold, source or rule-
 | Emergency savings | Emergency Savings feature | Liquid emergency-savings balance and recurring essential monthly expenses |
 | Debt burden | Budget and Debt Manager | Monthly disposable income and required monthly debt payments |
 | Financial margin | Budget and Debt Manager | Monthly disposable income, required monthly debt payments, and basic living costs |
-| Credit-card behaviour | Credit-card account history | Twelve consecutive months of account balance history |
+| Credit-card behaviour | Credit-card account history; onboarding self-report when no history exists | Twelve consecutive months of account balance history, or the user's reported count of revolving months |
 
 The application defines which user-entered budget categories are essential and which constitute basic living costs. Debt payments must be sourced from the Debt Manager's required or minimum payment values. Classification V2 must not derive debt payments from a proportion of total expenses.
 
@@ -173,7 +173,18 @@ Where:
 | **Light Revolver** | $1 \leq R \leq 11$ |
 | **Heavy Revolver** | $R = 12$ |
 
-The classification requires twelve consecutive observed balance months. Missing months produce `INSUFFICIENT_HISTORY`; they must not be treated as zero revolving balances.
+The classification requires the twelve completed calendar months immediately before
+the `classification_as_of` date. Missing, stale, or non-consecutive months produce
+`INSUFFICIENT_HISTORY`; they must not be treated as zero revolving balances.
+
+When no credit-card account history is supplied, the onboarding questionnaire's
+self-reported count of revolving-balance months in the last 12 months
+(`self_reported_revolving_months`, 0–12) is classified with the same rule. The
+result is tagged `source: self_reported` so it is never presented as observed
+history. Answers of *Never* and *Every month* map to $R = 0$ and $R = 12$; answers of
+*Some months* and *Not sure* use the follow-up question's count. Users without a
+credit card receive no credit-card assessment. Once observed history is supplied,
+it replaces the self-report.
 
 *Classification rules based on Adams et al. (2022), who distinguish the three account types using the number of months with revolving balances during the preceding 12 months.*
 

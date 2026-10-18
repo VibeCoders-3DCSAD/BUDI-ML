@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -33,12 +34,15 @@ class ClassificationV2Request(BaseModel):
 
     request_id: str = Field(min_length=1)
     user_id: str = Field(min_length=1)
+    classification_as_of: date
     liquid_emergency_savings: float | None = Field(default=None, ge=0)
     average_monthly_recurring_essential_expenses: float | None = Field(default=None, ge=0)
     monthly_disposable_income: float | None = Field(default=None, ge=0)
     required_monthly_debt_payments: float | None = Field(default=None, ge=0)
     monthly_basic_living_costs: float | None = Field(default=None, ge=0)
     credit_card_accounts: list[CreditCardAccount] | None = None
+    # Used only when no observed card history is supplied.
+    self_reported_revolving_months: int | None = Field(default=None, ge=0, le=12)
 
 
 class RuleAssessment(BaseModel):
@@ -51,6 +55,7 @@ class RuleAssessment(BaseModel):
 
 class CreditCardAssessment(RuleAssessment):
     account_id: str
+    source: Literal["observed_history", "self_reported"] = "observed_history"
 
 
 class ClassificationV2Result(BaseModel):
