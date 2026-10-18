@@ -38,7 +38,7 @@ def _run(request: BudgetRequest, registry: ModelRegistry) -> BudgetResponse:
         metadata=ApiMetadata(
             processing_time_ms=round((time.perf_counter() - start) * 1000, 2),
             model_version=model_version,
-            strategy_used="hierarchical_milp_v2",
+            strategy_used="hierarchical_lp_v2",
         ),
     )
 

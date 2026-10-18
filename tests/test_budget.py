@@ -74,7 +74,7 @@ def test_budget_recommend(client):
     assert rec["utilization_rate"] == 0.99
     assert rec["feasibility"] == "FEASIBLE"
     assert body["metadata"]["model_version"] == "budget-scipy_linprog"
-    assert body["metadata"]["strategy_used"] == "hierarchical_milp_v2"
+    assert body["metadata"]["strategy_used"] == "hierarchical_lp_v2"
 
 
 def test_budget_keeps_forecast_surplus_out_of_expense_categories(client):

@@ -11,7 +11,7 @@ models/
    forecaster/          # Spending forecaster — winner artifact + evaluation.json + metadata.json
    hfce_sarima_v4/      # Quarterly HFCE category trend models for personal projections
   anomaly/             # Anomaly detector — winner artifact + evaluation.json + metadata.json
-   budget/              # Financial Planning Management (deterministic MILP) — budget_config.json + evaluation.json + metadata.json
+   budget/              # Financial Planning Management (deterministic two-stage LP) — budget_config.json + evaluation.json + metadata.json
 ```
 
 Every family directory is self-contained and uniform:
@@ -76,7 +76,7 @@ the API reports the resolved winner (e.g. `model_version`: `forecaster-tier3_sar
   `null` otherwise).
 - Budget's committed historical evaluation contract is `scipy_linprog`, so `fitted: false`
   and the artifact is `budget_config.json`. The current Financial Planning Management serving
-  algorithm is MILP; see `docs/services/recommend/v4/methodology.md`.
+  algorithm is a two-stage continuous LP (`scipy.optimize.linprog`, HiGHS); see `docs/services/recommend/v4/methodology.md`.
 
 Because resolution is winner-contract-driven, swapping, adding, or removing a winner is a
 **metadata change, not a code change**.

@@ -1,15 +1,15 @@
-# Financial Planning Management V4 — MILP Methodology
+# Financial Planning Management V4 — LP Methodology
 
 ```json
 {
   "document-type": "system-spec",
-  "version": "4.0.0",
-  "date": "2026.10.11",
+  "version": "4.1.0",
+  "date": "2026.10.16",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
 
-> **Purpose:** This specification defines Financial Planning Management as a deterministic mixed-integer linear programming (MILP) allocation method. It creates a monthly category-allocation recommendation from available funds, user restrictions, priorities, and optional expense forecasts. It is not a trained machine-learning model.
+> **Purpose:** This specification defines Financial Planning Management as a deterministic linear programming (LP) allocation method. It creates a monthly category-allocation recommendation from available funds, user restrictions, priorities, and optional expense forecasts. It is not a trained machine-learning model.
 
 ---
 
@@ -20,7 +20,7 @@ Financial Planning Management solves a constrained allocation problem for one ca
 ```text
 available funds + category rules + priorities + optional expense forecast
                                   |
-                         two-stage MILP allocation
+                          two-stage LP allocation
                                   |
                   feasible plan or explicit shortfall
 ```
@@ -47,19 +47,13 @@ Fixed and minimum amounts are hard user commitments. Forecasts and target ratios
 
 ## Decision Variables and Units
 
-Let `i` represent a budget category and let `u = PHP 10` be the allocation unit. The solver selects the non-negative integer variable:
+Let `i` represent a budget category. The solver selects the continuous, non-negative peso allocation:
 
 $$
-z_i \in \mathbb{Z}_{\geq 0}
+x_i \in \mathbb{R}_{\geq 0}
 $$
 
-where the allocated peso amount is:
-
-$$
-x_i = u z_i
-$$
-
-Integer units ensure returned allocations are whole PHP 10 amounts. This avoids post-solver rounding that could otherwise violate a floor, ceiling, or total-funds constraint.
+Allocations are not restricted to whole-peso or PHP 10 units, and the service applies no post-solver rounding. Returned amounts keep centavo precision, so a forecast cap such as PHP 1,234.56 can be met exactly instead of being rounded down, and no rounding step can push an allocation outside its floor, ceiling, or the total-funds constraint.
 
 ---
 
@@ -76,10 +70,10 @@ The bounds depend on the user's restriction:
 | Restriction | Lower bound | Upper bound |
 | :--- | :--- | :--- |
 | `FIXED` | configured amount | same configured amount |
-| `MINIMUM` | configured floor, rounded up to PHP 10 | lower of configured ceiling and forecast target, but never below the floor |
-| `FLEXIBLE` | configured floor, rounded up to PHP 10 | lower of configured ceiling and forecast target, but never below the floor |
+| `MINIMUM` | configured floor | lower of configured ceiling and forecast target, but never below the floor |
+| `FLEXIBLE` | configured floor | lower of configured ceiling and forecast target, but never below the floor |
 
-When no forecast is present, the target derives from the configured target ratio when supplied. A fixed amount must already be divisible by PHP 10.
+When no forecast is present, the target derives from the configured target ratio when supplied. A fixed amount requires equal floor and ceiling.
 
 The plan cannot allocate more than the available funds `B`:
 
@@ -99,7 +93,7 @@ $$
 g_i = w_i(U_i - l_i)
 $$
 
-where `w_i` is the category priority weight. The first MILP maximizes a common coverage variable `r` subject to:
+where `w_i` is the category priority weight. The first LP maximizes a common coverage variable `r` subject to:
 
 $$
 x_i \geq l_i + r g_i
@@ -113,10 +107,10 @@ This prevents a higher-priority Essential category from consuming all remaining 
 
 ## Stage 2: Essential-First Allocation
 
-The second MILP retains the protected Essential floors and maximizes weighted allocation:
+The second LP retains the protected Essential floors and maximizes weighted allocation:
 
 $$
-\max \sum_i \left(w_i + P \cdot I_i\right)z_i
+\max \sum_i \left(w_i + P \cdot I_i\right)x_i
 $$
 
 where:
@@ -126,7 +120,7 @@ where:
 
 The Essential priority coefficient guarantees that a feasible Non-essential allocation cannot displace unmet Essential allocation. Within that hierarchy, category weights guide funds toward higher-priority categories.
 
-Both stages use `scipy.optimize.milp` with the HiGHS solver.
+Both stages use `scipy.optimize.linprog` with `method="highs"` (the HiGHS solver) over continuous variables.
 
 ---
 
@@ -140,11 +134,11 @@ $$
 
 If this condition holds, the request is `INFEASIBLE`. The service returns the required funds, available funds, shortfall, and affected categories. It does not silently relax fixed amounts or minimum floors.
 
-When the MILP solves successfully, the request is `FEASIBLE` and returns:
+When the LP solves successfully, the request is `FEASIBLE` and returns:
 
 | Output | Meaning |
 | :--- | :--- |
-| Allocations | One whole-PHP-10 recommended amount per category. |
+| Allocations | One recommended amount per category, in pesos with centavo precision (unrounded solver output). |
 | Utilization rate | Allocated funds divided by requested available funds. |
 | Constraint satisfaction | `1.0` only when all returned allocations meet their hard constraints. |
 | Unallocated surplus | Available funds not allocated because all valid category capacity is exhausted. |
@@ -154,14 +148,14 @@ When the MILP solves successfully, the request is `FEASIBLE` and returns:
 
 ## Integration Boundary
 
-The MILP determines required and constrained category allocations. It does not classify a user's financial condition, transfer money, execute debt payments, or force optional surplus into a savings goal or debt.
+The LP determines required and constrained category allocations. It does not classify a user's financial condition, transfer money, execute debt payments, or force optional surplus into a savings goal or debt.
 
-Financial Classification V2 evaluates the user's financial condition independently through fixed rules. After the MILP has reserved required commitments, the Financial Plan may apply the ordered classification-surplus policy to `unallocated_surplus`. See [Financial Plan Integration](../v3/financial-plan-integration.md) and [Financial Classification V2](../../classification/v2/specification.md).
+Financial Classification V2 evaluates the user's financial condition independently through fixed rules. After the LP has reserved required commitments, the Financial Plan may apply the ordered classification-surplus policy to `unallocated_surplus`. See [Financial Plan Integration](../v3/financial-plan-integration.md) and [Financial Classification V2](../../classification/v2/specification.md).
 
 ---
 
 ## Final Methodology Label
 
-**Financial Planning Management using Two-Stage Mixed-Integer Linear Programming**
+**Financial Planning Management using Two-Stage Linear Programming**
 
-This methodology creates a transparent monthly financial plan by satisfying non-negotiable user constraints, prioritizing Essential-category coverage, and preserving whole-PHP-10 feasibility without relying on trained predictive allocation models.
+This methodology creates a transparent monthly financial plan by satisfying non-negotiable user constraints, prioritizing Essential-category coverage, and preserving exact centavo-level feasibility without relying on trained predictive allocation models.

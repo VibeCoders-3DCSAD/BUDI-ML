@@ -2,7 +2,8 @@
 
 Canonical home for the **new-scope** budget optimizer configuration (`metadata.json` + config).
 The current Financial Planning Management serving implementation is a deterministic
-mixed-integer linear program (MILP) (`scipy.optimize.milp` with HiGHS), so there is
+two-stage linear program (LP) (`scipy.optimize.linprog` with `method="highs"`, continuous
+allocations with centavo precision), so there is
 no trained artifact; the "model" is the constraint formulation + configuration.
 
 ## Decision rule / metrics
@@ -11,7 +12,7 @@ no trained artifact; the "model" is the constraint formulation + configuration.
 
 ## Target artifact
 
-- `budget_config.json` — solver + constraint-contract snapshot (the current MILP formulation pins
+- `budget_config.json` — solver + constraint-contract snapshot (the current LP formulation pins
   `app/services/budget_service.py`).
 - `metadata.json` — historical V1 LP evaluation contract (`scipy_linprog`), retained for provenance.
 

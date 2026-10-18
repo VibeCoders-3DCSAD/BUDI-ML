@@ -86,12 +86,12 @@ The optimizer frames budget allocation as a **linear program** — a mathematica
 | **MINIMUM** | Allocation ≥ floor | Minimum categories cannot be reduced below their configured floor. |
 | **Forecast cap** | allocation ≤ forecast target | Flexible and Minimum categories do not exceed their forecast target unless a configured hard floor is higher. |
 
-All recommendations use whole ₱10 units. Fixed amounts must already be divisible by ₱10; configured minimums round up to protect the requirement, while forecast and configured caps round down so the recommendation never exceeds them.
+Allocations are continuous peso amounts with centavo precision. No rounding is applied, so configured minimums, forecast caps, and configured caps are honored exactly.
 | **Deviation** | deviation ≥ allocation − target AND deviation ≥ target − allocation | Deviation captures the absolute gap between what was allocated and what was desired. |
 
 ### 2. Solving
 
-The problem is passed to `scipy.optimize.milp` with the **HiGHS** solver as two sequential mixed-integer linear programs: weighted Essential coverage, then Essential-first weighted forecast fit. Allocations are whole ₱10 units, which preserves Essential-first allocation and prevents rounding from breaking the budget, floors, or forecast caps.
+The problem is passed to `scipy.optimize.linprog` with the **HiGHS** solver (`method="highs"`) as two sequential linear programs: weighted Essential coverage, then Essential-first weighted forecast fit. Allocations are continuous and unrounded, so no rounding step can break the budget, floors, or forecast caps.
 
 ### 3. Feasibility check
 

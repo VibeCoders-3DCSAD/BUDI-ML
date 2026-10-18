@@ -19,7 +19,7 @@ EPS = 1e-9
 def optimize(request: BudgetRequest) -> tuple[BudgetRecommendation, list[BudgetExplanation]]:
     """Solve one monthly Financial Plan allocation without relaxing user rules.
 
-    Forecast targets cap allocations. A first mixed-integer program maximizes
+    Forecast targets cap allocations. A first linear program maximizes
     weighted Essential coverage so a lower-weight Essential is not starved. A
     second program preserves that coverage, funds Essentials before Non-essentials,
     then uses category weights to get as close to forecast caps as possible.
