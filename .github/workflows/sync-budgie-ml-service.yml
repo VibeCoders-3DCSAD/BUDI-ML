@@ -1,0 +1,43 @@
+name: Sync budgie-ml-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "scripts/budgie-sync-manifest.txt"
+      - "scripts/sync-budgie-ml-service.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-budgie-ml-service
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: odin-ml
+
+      # A deploy-key push (unlike GITHUB_TOKEN) triggers budgie's CI, which then deploys.
+      - uses: actions/checkout@v4
+        with:
+          repository: VibeCoders-3DCSAD/budgie-ml-service
+          ref: main
+          path: budgie-ml-service
+          ssh-key: ${{ secrets.BUDGIE_ML_SERVICE_DEPLOY_KEY }}
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Sync, verify, commit, and push
+        run: |
+          git -C budgie-ml-service config user.name "odin-ml-sync[bot]"
+          git -C budgie-ml-service config user.email "odin-ml-sync@users.noreply.github.com"
+          (cd budgie-ml-service && uv sync --locked)
+          odin-ml/scripts/sync-budgie-ml-service.sh "$GITHUB_WORKSPACE/budgie-ml-service" --push

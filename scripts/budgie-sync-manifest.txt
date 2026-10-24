@@ -1,0 +1,8 @@
+# Files mirrored verbatim into VibeCoders-3DCSAD/budgie-ml-service.
+# List a file only once its budgie copy carries nothing of its own; the sync
+# overwrites the target, so budgie-only hardening must land here first.
+app/api/classification.py
+app/schemas/classification.py
+app/services/classification_service.py
+tests/test_classification.py
+tests/test_classification_rules.py
