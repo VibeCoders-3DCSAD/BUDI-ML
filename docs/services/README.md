@@ -8,8 +8,8 @@ directories unchanged. Each document's metadata supplies its publication date.
 | Module | Endpoint | Available versions |
 | :--- | :--- | :--- |
 | `classification/` | `/api/v1/classification/v2` | `v2/` |
-| `iqr/` | `/api/v1/anomaly/detect` | `v1/`, `v2/` |
-| `recommend/` | `/api/v1/budget/recommend` | `v2/`, `v3/`, `v4/` |
+| `iqr/` | None; runs on-device in the Odin app (Python reference detector only) | `v1/`, `v2/` |
+| `recommend/` | `/api/v1/budget/recommend`, `/api/v1/budget/recommend/batch` | `v2/`, `v3/`, `v4/` |
 | `forecast/` | `/api/v1/forecast/predict` | `v1/`, `v2/`, `v3/` |
 
 The version number records the chronological service-document generation. It

@@ -3,8 +3,8 @@
 ```json
 {
   "document-type": "system-spec",
-  "version": "4.1.0",
-  "date": "2026.10.16",
+  "version": "4.2.0",
+  "date": "2026.10.19",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
@@ -20,18 +20,18 @@ Financial Planning Management solves a constrained allocation problem for one ca
 ```text
 available funds + category rules + priorities + optional expense forecast
                                   |
-                          two-stage LP allocation
+                         three-stage LP allocation
                                   |
                   feasible plan or explicit shortfall
 ```
 
-The method first protects weighted Essential-category coverage, then allocates the remaining feasible funds with Essential categories prioritized over Non-essential categories. The result is deterministic: identical validated inputs produce the same recommendation.
+The method first protects weighted Essential-category coverage, then applies the same coverage procedure to Non-essential categories using funds remaining after Essential targets. The final allocation preserves both groups' coverage floors and prioritizes Essential categories. The result is deterministic: identical validated inputs produce the same recommendation.
 
 ---
 
 ## Scope and Inputs
 
-The service operates at `POST /api/v1/budget/recommend` for exactly one calendar month.
+The service operates at `POST /api/v1/budget/recommend` for exactly one calendar month. `POST /api/v1/budget/recommend/batch` applies the same method independently to a list of requests.
 
 | Input | Purpose |
 | :--- | :--- |
@@ -42,6 +42,14 @@ The service operates at `POST /api/v1/budget/recommend` for exactly one calendar
 | Expense forecast | Optional category target that caps discretionary allocation. |
 
 Fixed and minimum amounts are hard user commitments. Forecasts and target ratios guide discretionary allocation only; they do not reduce a hard floor or make an infeasible plan feasible.
+
+The request is rejected (`422`) before solving when:
+
+- the period does not cover exactly one calendar month (first day through last day);
+- `available_funds` is not positive;
+- a `category_id` is duplicated;
+- a category's ceiling is below its floor, or a `FIXED` category's floor and ceiling differ; or
+- a forecast is supplied whose month differs from the plan month, or whose categories are not exactly the plan's categories.
 
 ---
 
@@ -73,7 +81,7 @@ The bounds depend on the user's restriction:
 | `MINIMUM` | configured floor | lower of configured ceiling and forecast target, but never below the floor |
 | `FLEXIBLE` | configured floor | lower of configured ceiling and forecast target, but never below the floor |
 
-When no forecast is present, the target derives from the configured target ratio when supplied. A fixed amount requires equal floor and ceiling.
+When no forecast is present, the target is `B × target_ratio_i`. A category with neither a forecast nor a target ratio has a target of zero, so its upper bound collapses to its floor: it receives exactly its floor. A fixed amount requires equal floor and ceiling.
 
 The plan cannot allocate more than the available funds `B`:
 
@@ -93,7 +101,7 @@ $$
 g_i = w_i(U_i - l_i)
 $$
 
-where `w_i` is the category priority weight. The first LP maximizes a common coverage variable `r` subject to:
+where `w_i` is the category priority weight (`0`-`1`; a zero weight is treated as `10^-9`). Only Essential categories with `U_i > l_i` take part. The first LP maximizes a common coverage variable `r` subject to:
 
 $$
 x_i \geq l_i + r g_i
@@ -105,9 +113,19 @@ This prevents a higher-priority Essential category from consuming all remaining 
 
 ---
 
-## Stage 2: Essential-First Allocation
+## Stage 2: Non-essential Coverage
 
-The second LP retains the protected Essential floors and maximizes weighted allocation:
+The second LP applies the same weighted-gap definition, common coverage variable, and coverage constraints as Stage 1 to eligible Non-essential categories. During this solve, Essential allocations are held at their upper bounds, reserving their forecast-capped targets or higher hard commitments. All Non-essential fixed amounts and minimum floors remain mandatory.
+
+If those reserved Essential targets and Non-essential floors exhaust or exceed available funds, this stage is skipped. Otherwise, it maximizes Non-essential coverage using the remaining funds and protects the resulting Non-essential floors for the final allocation. Categories with no allocation range, including zero-target categories with a zero floor, do not participate.
+
+Thus, a lower-weight Non-essential category with a positive allocation range receives a share whenever funds remain above Essential targets and mandatory floors, using the same procedure as an Essential category.
+
+---
+
+## Stage 3: Essential-First Allocation
+
+The final LP retains the protected Essential and Non-essential floors and maximizes weighted allocation:
 
 $$
 \max \sum_i \left(w_i + P \cdot I_i\right)x_i
@@ -116,11 +134,11 @@ $$
 where:
 
 - `I_i = 1` when category `i` is Essential and `0` otherwise; and
-- `P` is greater than the maximum possible weighted allocation contribution.
+- $P = \sum_i w_i U_i + 1$, which is greater than the maximum possible weighted allocation contribution.
 
-The Essential priority coefficient guarantees that a feasible Non-essential allocation cannot displace unmet Essential allocation. Within that hierarchy, category weights guide funds toward higher-priority categories.
+The Essential priority coefficient guarantees that discretionary Non-essential allocation cannot displace unmet Essential allocation. Within that hierarchy and the protected coverage floors, category weights guide funds toward higher-priority categories.
 
-Both stages use `scipy.optimize.linprog` with `method="highs"` (the HiGHS solver) over continuous variables.
+All stages use `scipy.optimize.linprog` with `method="highs"` (the HiGHS solver) over continuous variables. A coverage solve is omitted when its group has no eligible categories.
 
 ---
 
@@ -132,17 +150,19 @@ $$
 \sum_i l_i > B
 $$
 
-If this condition holds, the request is `INFEASIBLE`. The service returns the required funds, available funds, shortfall, and affected categories. It does not silently relax fixed amounts or minimum floors.
+If this condition holds, or if the solver fails, the request is `INFEASIBLE`. The service returns each category's lower bound as its allocation, `constraint_satisfaction = 0`, the required funds, available funds, shortfall, and the categories with a positive lower bound. It does not silently relax fixed amounts or minimum floors.
+
+After a successful solve, the service checks each allocation against its configured floor and ceiling (and, for `FIXED`, its exact amount). Any violation sets `constraint_satisfaction` to `0` and the status to `INFEASIBLE`.
 
 When the LP solves successfully, the request is `FEASIBLE` and returns:
 
 | Output | Meaning |
 | :--- | :--- |
 | Allocations | One recommended amount per category, in pesos with centavo precision (unrounded solver output). |
-| Utilization rate | Allocated funds divided by requested available funds. |
+| Utilization rate | Allocated funds divided by requested available funds, without rounding. |
 | Constraint satisfaction | `1.0` only when all returned allocations meet their hard constraints. |
-| Unallocated surplus | Available funds not allocated because all valid category capacity is exhausted. |
-| Explanations | Restriction-level explanation for each returned category allocation. |
+| Unallocated surplus | Available funds minus allocated funds, without rounding. |
+| Explanations | Returned only when `include_reasoning` is true (the default). Every `FIXED` and `MINIMUM` category receives a restriction-level explanation; a `FLEXIBLE` category receives one only when its allocation is positive. |
 
 ---
 
