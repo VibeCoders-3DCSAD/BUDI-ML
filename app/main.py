@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
+from anyio import CapacityLimiter
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -20,6 +21,7 @@ if not logging.getLogger().handlers:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.compute_limiter = CapacityLimiter(1)
     registry = ModelRegistry()
     registry.load_all()
     app.state.registry = registry

@@ -7,6 +7,7 @@ from decimal import ROUND_HALF_UP, Decimal
 import numpy as np
 import pandas as pd
 
+from app.core.config import MAX_FORECAST_MONTHS
 from app.models.registry import ModuleModel
 from app.schemas.forecast import ForecastPoint
 from app.services.features import transactions_to_frame
@@ -89,7 +90,9 @@ def _history_window(expenses: pd.DataFrame, as_of: date) -> list[pd.Period]:
     """Completed months from the user's first recorded expense in the lookback window through last month."""
     current_month = pd.Period(as_of, freq="M")
     months = expenses["date"].dt.to_period("M")
-    recorded = months.loc[months.ge(current_month - BASELINE_LOOKBACK_MONTHS) & months.lt(current_month)]
+    recorded = months.loc[
+        months.ge(current_month - BASELINE_LOOKBACK_MONTHS) & months.lt(current_month)
+    ]
     if recorded.empty:
         return []
     return list(pd.period_range(recorded.min(), current_month - 1, freq="M"))
@@ -121,7 +124,9 @@ def _same_quarter_last_year_baseline(
     prior_quarter = target_quarter - QUARTERS_PER_YEAR
     months = [
         month
-        for month in pd.period_range(prior_quarter.asfreq("M", "start"), prior_quarter.asfreq("M", "end"), freq="M")
+        for month in pd.period_range(
+            prior_quarter.asfreq("M", "start"), prior_quarter.asfreq("M", "end"), freq="M"
+        )
         if current_month - BASELINE_LOOKBACK_MONTHS <= month < current_month
     ]
     if not months:
@@ -157,9 +162,11 @@ def forecast(
     """Project each HFCE category for one month: the next calendar month unless one is given."""
     as_of = as_of or date.today()
     current_month = pd.Period(as_of, freq="M")
-    target_month = pd.Period(target_month, freq="M") if target_month else current_month + 1
-    if target_month < current_month:
+    target_period = pd.Period(target_month, freq="M") if target_month else current_month + 1
+    if target_period < current_month:
         raise ValueError("forecast target month cannot be in the past")
+    if target_period > current_month + MAX_FORECAST_MONTHS:
+        raise ValueError("forecast target month exceeds the 12-month serving horizon")
     frame = transactions_to_frame(transactions)
     expenses = frame.loc[
         frame["transaction_type"].eq("expense") & frame["date"].dt.date.le(as_of)
@@ -167,7 +174,7 @@ def forecast(
     if expenses.empty:
         raise ValueError("forecast requires at least one expense transaction")
 
-    target_quarter = target_month.asfreq("Q")
+    target_quarter = target_period.asfreq("Q")
     window = _history_window(expenses, as_of)
     method = _baseline_method(len(window))
     seasonal = method == SAME_QUARTER_LAST_YEAR
@@ -178,33 +185,29 @@ def forecast(
             raise ValueError(f"forecast does not support category: {category}")
         # A yearly category such as Christmas gifts stays current through the full year of history.
         user_baseline, monthly_history, baseline_months = _monthly_baseline(
-            expenses, category, as_of, BASELINE_LOOKBACK_MONTHS + 1 if seasonal else STALE_CATEGORY_MONTHS
+            expenses,
+            category,
+            as_of,
+            BASELINE_LOOKBACK_MONTHS + 1 if seasonal else STALE_CATEGORY_MONTHS,
         )
         baseline_weights = np.arange(1, len(monthly_history) + 1, dtype="float64")
         seasonal_baseline = (
-            _same_quarter_last_year_baseline(expenses, category, as_of, target_quarter) if seasonal else None
+            _same_quarter_last_year_baseline(expenses, category, as_of, target_quarter)
+            if seasonal
+            else None
         )
         if seasonal_baseline is not None:
             user_baseline, monthly_history, baseline_months = seasonal_baseline
             baseline_weights = np.ones(len(monthly_history), dtype="float64")
         elif method == MEDIAN_MONTHLY:
-            user_baseline, monthly_history, baseline_months = _median_monthly_baseline(expenses, category, window)
+            user_baseline, monthly_history, baseline_months = _median_monthly_baseline(
+                expenses, category, window
+            )
             baseline_weights = np.ones(len(monthly_history), dtype="float64")
-        point_method = PROVISIONAL if method == SAME_QUARTER_LAST_YEAR and seasonal_baseline is None else method
-        weighted_total = float(np.dot(monthly_history, baseline_weights))
-        logger.info(
-            "forecast baseline user_id=%s category=%s method=%s completed_months=%s "
-            "monthly_amounts_php=%s recency_weights=%s weighted_total_php=%.2f "
-            "weight_total=%.0f baseline_php=%.2f",
-            user_id,
-            category,
-            point_method,
-            baseline_months,
-            [round(float(amount), 2) for amount in monthly_history],
-            [int(weight) for weight in baseline_weights],
-            weighted_total,
-            baseline_weights.sum(),
-            user_baseline,
+        point_method = (
+            PROVISIONAL
+            if method == SAME_QUARTER_LAST_YEAR and seasonal_baseline is None
+            else method
         )
 
         artifact_quarter = pd.Period(artifact["period_end"], freq="Q")
@@ -223,22 +226,16 @@ def forecast(
         multiplier = national_forecast / national_baseline
         amount = user_baseline * multiplier
         logger.info(
-            "forecast prediction user_id=%s category=%s baseline_php=%.2f "
-            "baseline_quarters=%s national_baseline_million_php=%.2f "
-            "national_forecast_million_php=%.2f hfce_multiplier=%.6f final_amount_php=%.2f",
-            user_id,
+            "forecast completed category=%s method=%s baseline_month_count=%s target_month=%s",
             category,
-            user_baseline,
-            [str(quarter) for quarter in baseline_quarters],
-            national_baseline,
-            national_forecast,
-            multiplier,
-            amount,
+            point_method,
+            len(baseline_months),
+            str(target_period),
         )
         points.append(
             ForecastPoint(
                 category=category,
-                month=str(target_month),
+                month=str(target_period),
                 quarter=str(target_quarter),
                 amount=_round_to_whole_peso(amount),
                 user_baseline_amount=round(user_baseline, 2),

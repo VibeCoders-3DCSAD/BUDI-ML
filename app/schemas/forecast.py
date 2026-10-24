@@ -10,8 +10,8 @@ from app.schemas.common import ApiMetadata, ModuleStatus, Transaction
 
 class ForecastRequest(BaseModel):
     user_id: str
-    historical_transactions: list[Transaction] = Field(min_length=1)
-    categories: list[str] = Field(min_length=1)
+    historical_transactions: list[Transaction] = Field(min_length=1, max_length=10_000)
+    categories: list[str] = Field(min_length=1, max_length=12)
     # Month to forecast (YYYY-MM); defaults to the next calendar month.
     target_month: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
 

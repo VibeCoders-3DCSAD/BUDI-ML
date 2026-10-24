@@ -7,6 +7,7 @@ Run with pytest, or directly for the results table and metrics:
 from __future__ import annotations
 
 import pytest
+
 from app.schemas.classification import ClassificationV2Request
 from app.services.classification_service import classify
 

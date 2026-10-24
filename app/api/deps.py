@@ -5,6 +5,7 @@ import hmac
 import os
 from dataclasses import dataclass
 
+from anyio import CapacityLimiter
 from fastapi import Header, HTTPException, Request
 
 from app.core.config import TRUSTED_HISTORY_SHARED_SECRET_ENV
@@ -46,3 +47,7 @@ def require_trusted_user(context: TrustedHistoryContext, user_id: str) -> None:
     """Ensure each scored payload belongs to the gateway-authenticated user."""
     if not hmac.compare_digest(context.user_id, user_id):
         raise HTTPException(status_code=401, detail="payload user does not match trusted identity")
+
+
+def get_compute_limiter(request: Request) -> CapacityLimiter:
+    return request.app.state.compute_limiter

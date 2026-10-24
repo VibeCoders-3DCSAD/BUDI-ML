@@ -6,3 +6,7 @@ app/schemas/classification.py
 app/services/classification_service.py
 tests/test_classification.py
 tests/test_classification_rules.py
+app/api/forecast.py
+app/schemas/forecast.py
+app/services/forecast_service.py
+tests/test_forecast.py
