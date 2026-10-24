@@ -27,6 +27,7 @@ This repository contains the **machine learning service** for the BUDI applicati
 
 - `Odin` and `Odin-QA` are **read-only** to this agent. Do not modify, commit, or delete files in them.
 - `Odin-ML` is fully writable.
+- `budgie-ml-service` is **read-only** to this agent. It is the deployed inference service, and every push to its `main` deploys to production. Make changes here in `Odin-ML`; files listed in `scripts/budgie-sync-manifest.txt` reach it through the `Sync budgie-ml-service` workflow.
 
 ---
 
