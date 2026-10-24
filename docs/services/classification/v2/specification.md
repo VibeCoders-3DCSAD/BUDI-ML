@@ -49,7 +49,7 @@ assessment label or insufficient-data state
 | Emergency savings | liquid emergency savings / recurring essential expenses | `EMERGENCY_FUND_ADEQUATE` or `EMERGENCY_FUND_INADEQUATE` |
 | Debt burden | required monthly debt payments / disposable income | `FINANCIALLY_OVERBURDENED` or `NOT_FINANCIALLY_OVERBURDENED` |
 | Financial margin | disposable income - debt payments - basic living costs | `POSITIVE_FINANCIAL_MARGIN` or `NEGATIVE_FINANCIAL_MARGIN` |
-| Credit-card behavior | count of revolving-balance months in the prior 12 consecutive months | `TRANSACTOR`, `LIGHT_REVOLVER`, or `HEAVY_REVOLVER` |
+| Credit-card behavior | count of revolving-balance months in the prior 12 consecutive months | `TRANSACTOR`, `LIGHT_REVOLVER`, or `HEAVY_REVOLVER`; provisional `REVOLVER` when a short history already shows a carried balance |
 
 If an assessment lacks a required input, has a non-positive denominator, or lacks the required credit-card history, it returns an explicit insufficient-data state. The system must not substitute population averages, synthetic data, or a predicted classification.
 
@@ -115,7 +115,7 @@ $$
 | **Not Financially Overburdened** | $DSTI \leq 40\%$ |
 | **Financially Overburdened** | $DSTI > 40\%$ |
 
-Monthly disposable income is the value used by the user's budget. An absent or non-positive denominator produces `INSUFFICIENT_DATA`, not a ratio.
+Monthly disposable income is the value used by the user's budget. An absent or non-positive denominator produces `INSUFFICIENT_DATA`, not a ratio. The service response reports DSTI as a ratio rounded to four decimal places (for example, `0.4` for 40%) with `threshold: 0.4`.
 
 *Classification threshold based on He and Zhou (2022); the labels are ODIN's operational classifications of debt burden.*
 
@@ -143,6 +143,8 @@ $$
 | :--- | :--- |
 | **Positive Financial Margin** | $FM \geq 0$ |
 | **Negative Financial Margin** | $FM < 0$ |
+
+A missing input or a non-positive monthly disposable income produces `INSUFFICIENT_DATA`. The response reports FM in pesos, rounded to centavos.
 
 *The classifications apply the sign of the financial margin discussed by He and Zhou (2022). For ODIN, these categories describe the financial-margin state rather than overall financial vulnerability.*
 
@@ -177,6 +179,14 @@ The classification requires the twelve completed calendar months immediately bef
 the `classification_as_of` date. Missing, stale, or non-consecutive months produce
 `INSUFFICIENT_HISTORY`; they must not be treated as zero revolving balances.
 
+One exception applies before the twelve months are complete. If any observed month
+inside that window already carried a revolving balance, the account is labelled a
+provisional **Revolver** (`REVOLVER`, value = observed revolving months). A carried
+balance is enough to rule out a transactor, but light and heavy revolvers can only be
+told apart once the full twelve months exist, at which point the table above applies.
+A short history with no carried balance remains `INSUFFICIENT_HISTORY`, because the
+missing months could still hold one.
+
 When no credit-card account history is supplied, the onboarding questionnaire's
 self-reported count of revolving-balance months in the last 12 months
 (`self_reported_revolving_months`, 0–12) is classified with the same rule. The
@@ -187,6 +197,24 @@ credit card receive no credit-card assessment. Once observed history is supplied
 it replaces the self-report.
 
 *Classification rules based on Adams et al. (2022), who distinguish the three account types using the number of months with revolving balances during the preceding 12 months.*
+
+### Questionnaire Duration Choices
+
+The current questionnaire also accepts a categorical duration through the optional
+`self_reported_revolving_range` field. It is used only when no observed card
+history is supplied, and takes precedence over a legacy exact self-reported count:
+
+| Questionnaire response | Stored range | Self-reported label |
+| :--- | :--- | :--- |
+| I don't use a credit card | `no_credit_card` | `NO_CREDIT_CARD` |
+| I always pay on or before the due date | `always_before_due` | `TRANSACTOR` |
+| 1–11 months | `1_to_11_months` | `LIGHT_REVOLVER` |
+| Over a year | `over_a_year` | `HEAVY_REVOLVER` |
+
+These duration categories are questionnaire self-reports, not observed counts in
+the preceding twelve months. Their assessments retain `reported_duration`, set
+`source` to `self_reported`, and leave `value` null. The app displays the original
+range. Exact-count requests and observed-history rules remain supported.
 
 ### Reference
 

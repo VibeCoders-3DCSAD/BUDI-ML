@@ -8,6 +8,7 @@ from app.schemas.classification import (
     ClassificationV2Result,
     CreditCardAccount,
     CreditCardAssessment,
+    RevolvingRange,
     RuleAssessment,
 )
 
@@ -87,6 +88,28 @@ def _credit_card_behavior(
     assessment_month = classification_as_of.year * 12 + classification_as_of.month
     required_periods = list(range(assessment_month - 12, assessment_month))
     if len(account.cycles) != 12 or len(periods) != 12 or periods != required_periods:
+        # A balance carried within the window already proves revolving, even before
+        # the full 12 months exist to tell light from heavy.
+        window = set(required_periods)
+        observed_revolving = {
+            cycle.completed_on.year * 12 + cycle.completed_on.month
+            for cycle in account.cycles
+            if cycle.revolving_balance > 0
+            and cycle.completed_on.year * 12 + cycle.completed_on.month in window
+        }
+        if observed_revolving:
+            return CreditCardAssessment(
+                account_id=account.account_id,
+                status=ClassificationDataStatus.SUCCESS,
+                label="REVOLVER",
+                value=len(observed_revolving),
+                threshold=12,
+                inputs={
+                    "revolving_months": len(observed_revolving),
+                    "observed_completed_cycles": len(window.intersection(periods)),
+                    "required_completed_cycles": 12,
+                },
+            )
         return CreditCardAssessment(
             account_id=account.account_id,
             status=ClassificationDataStatus.INSUFFICIENT_HISTORY,
@@ -134,9 +157,31 @@ def _credit_card_assessments(request: ClassificationV2Request) -> list[CreditCar
             _credit_card_behavior(account, request.classification_as_of)
             for account in request.credit_card_accounts
         ]
+    if request.self_reported_revolving_range is not None:
+        return [_self_reported_credit_card_range(request.self_reported_revolving_range)]
     if request.self_reported_revolving_months is not None:
         return [_self_reported_credit_card_behavior(request.self_reported_revolving_months)]
     return []
+
+
+def _self_reported_credit_card_range(duration: RevolvingRange) -> CreditCardAssessment:
+    labels = {
+        "no_credit_card": "NO_CREDIT_CARD",
+        "always_before_due": "TRANSACTOR",
+        "1_to_11_months": "LIGHT_REVOLVER",
+        "over_a_year": "HEAVY_REVOLVER",
+    }
+    # A range establishes the category, but never an exact observed month count.
+    return CreditCardAssessment(
+        account_id="self_reported",
+        source="self_reported",
+        reported_duration=duration,
+        status=ClassificationDataStatus.SUCCESS,
+        label=labels[duration],
+        value=None,
+        threshold=12,
+        inputs={},
+    )
 
 
 def classify(request: ClassificationV2Request) -> ClassificationV2Result:

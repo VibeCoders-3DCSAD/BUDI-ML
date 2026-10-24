@@ -199,6 +199,20 @@ CASES = [
         {"credit_card_accounts": _cards(0, year=2024)},
         "INSUFFICIENT_HISTORY",
     ),
+    (
+        "CC-07",
+        "EP short history with a carried balance",
+        "credit_card_behavior",
+        {"credit_card_accounts": _cards(3, cycles=11)},
+        "REVOLVER",
+    ),
+    (
+        "CC-08",
+        "EP stale carried balance",
+        "credit_card_behavior",
+        {"credit_card_accounts": _cards(3, year=2024)},
+        "INSUFFICIENT_HISTORY",
+    ),
 ]
 
 RULE_OUTCOMES = {
@@ -221,6 +235,7 @@ RULE_OUTCOMES = {
         "TRANSACTOR",
         "LIGHT_REVOLVER",
         "HEAVY_REVOLVER",
+        "REVOLVER",
         "INSUFFICIENT_HISTORY",
     },
 }
