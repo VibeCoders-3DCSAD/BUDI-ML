@@ -2,7 +2,7 @@
 
 - **Project:** Development of BUDI: A Personalized Intelligent Finance Management Application for Filipinos Using Classification, Forecasting, Optimization, and Anomaly Detection Models for Improving Savings and Debt
 - **Institution:** University of Makati | Group 4, III-DCSAD
-- **Last indexed:** 2026-10-09
+- **Last indexed:** 2026-10-21
 
 ---
 
@@ -84,6 +84,7 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | Path | Purpose |
 | :--- | :--- |
 | `training/scripts/{data,pipeline,modeling,analysis,shared}/` | Data preparation, pipeline, modeling, analysis, and shared-script modules. |
+| `training/scripts/modeling/compare_hfce_global_models.py` | Pooled HFCE LSTM/Random Forest comparison against individual SARIMA, with chronological selection and expanding walk-forward evaluation. |
 | `training/docs/` | ML design documents (data collection, EDA, dimension discovery). |
 | `training/docs/pen-and-paper-algorithms.md` | Hand-executable serve-time algorithms: PFP, forecast v2 SARIMA, IQR alerts, Financial Planning Management LP. |
 | `training/docs/pen-and-paper-simulation.md` | End-to-end pipeline simulation from a FIES row through one persona. |
@@ -106,9 +107,12 @@ The model development pipeline. Large generated artifacts are gitignored; script
 | `docs/README.md` | Clarifies the split between standards, model, service, and training documentation. |
 | `docs/services/README.md` | Versioned service documentation for classification, IQR, recommend, and forecast. |
 | `docs/models/TEAMMATE-GUIDE.md` | Trusted path for human teammates and AI agents: scope, runbooks, verification. |
-| `docs/services/forecast/v1/overview.md` | Plain-language serving explanation; v1 evaluation figures. |
+| `docs/experiments/hfce-global-model-comparison.md` | Observed quarterly HFCE experiment: split, pooled models, seasonal baseline, SARIMA comparison, held-out metrics, and reproduction command. |
+| `docs/experiments/hfce-global-model-comparison.json` | Experiment provenance, locked configurations, candidate validation scores, and category/horizon evaluation metrics. |
+| `docs/experiments/hfce-global-model-category-metrics.csv` | Per-category validation and test SMAPE, MAE, RMSE, and MDA for each forecasting model and horizon. |
+| `docs/services/forecast/v1/methodology.md` | First service-document generation: unserved survey-only research pipeline using forecaster_v3 artifacts. |
 | `docs/services/forecast/v2/methodology.md` | HFCE-calibrated v2 training note: empirical backing, SARIMA vs ARIMA, 2026-09-17 metrics. |
-| `docs/services/forecast/v3/methodology.md` | Unserved survey-only v3 forecast pipeline and external-validation release gate. |
+| `docs/services/forecast/v3/overview.md` | Current quarterly HFCE SARIMA serving explanation and model-selection contract. |
 | `docs/services/iqr/v2/methodology.md` | V2 personal transaction-IQR anomaly rule (served on-device by the Odin app) and evaluation-only corpus contract. |
 | `docs/services/classification/v2/specification.md` | Deterministic financial classification rules, service contract, input sources, and literature provenance. |
 | `docs/services/recommend/v3/financial-plan-integration.md` | Current Financial Plan classification and optional-surplus integration contract. |
