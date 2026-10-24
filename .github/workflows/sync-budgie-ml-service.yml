@@ -17,6 +17,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # The deploy key lives in this environment, which only main may use.
+    environment: budgie-sync
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
