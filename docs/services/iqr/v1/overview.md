@@ -74,8 +74,7 @@ The training pipeline tested multiple approaches in tiers:
 | 2 | Adaptive Threshold, Isolation Forest, One-Class SVM, Autoencoder | Four different learned approaches that try to model the user's "normal" and detect deviations from it. |
 | 3 | Hybrid Ensemble | Average the scores of multiple models for a more robust signal. |
 
-A **decision rule** enforced at training time (revised 2026.09.10 under Option A — see
-`docs/thesis/anomaly-decision-rule-rationale.md`): the winner must reach **≥ 1.5× the IQR
+A **decision rule** enforced at training time (revised 2026.09.10 under Option A): the winner must reach **≥ 1.5× the IQR
 baseline's PR-AUC** AND a **PR-AUC of at least 0.15**; otherwise fall back to IQR. The rule
 is applied to the **held-out test split** (not just folds), so a candidate that looks good
 on training folds must also prove it on unseen users. Operating point: the validation

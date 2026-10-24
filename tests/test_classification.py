@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import pytest
+
 from app.schemas.classification import ClassificationV2Request
 from app.services.classification_service import classify
-
 from tests.conftest import trusted_post
 
 

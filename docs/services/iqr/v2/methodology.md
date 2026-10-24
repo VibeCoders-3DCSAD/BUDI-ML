@@ -44,7 +44,8 @@ Every production anomaly decision is based only on the current user's chronologi
 
 Production detection runs on the user's device against the local Odin ledger. The history query is
 scoped to the signed-in `user_id` and selects only posted, non-deleted expense transactions with a
-positive amount from the previous twelve months (at most 5,000 transactions). No transaction
+positive amount from the previous twelve months, ordered oldest first and capped at 5,000
+transactions (when a user exceeds the cap, the newest transactions are the ones omitted). No transaction
 history is sent to the ML service for anomaly scoring; the ML service exposes no anomaly endpoint.
 
 | Input | Permitted in production anomaly decision | Notes |
@@ -194,7 +195,7 @@ Amount-scale bounds are calculated as `exp(L_(u,c)) - 1` and `exp(U_(u,c)) - 1`,
 
 The Odin app persists only `ANOMALOUS` decisions, as one `anomaly_evaluations` row per transaction with: `transaction_id`, `subcategory_id`, `amount_centavos`, `usable_history_count`, `usual_spending_centavos` (median of the baseline), `lower_bound_centavos`, `upper_bound_centavos`, `severity`, `model_version` `personal-transaction-iqr-local-v2.4.0`, `evaluated_at`, and `confirmed_recurring_at` (null until confirmed). Score fields are immutable once synced. `NORMAL` and insufficient states are not persisted or shown.
 
-The odin-ml reference detector returns every state for every expense with the canonical category, usable-history count, bounds and severity (`null` for both insufficient states; `0` for `NORMAL`), and `ruleset_version` `personal-transaction-iqr-v2.4.0`. It requires unique, non-null `transaction_id` values and canonical lowercase category identifiers (`[a-z][a-z0-9_]*`).
+The odin-ml reference detector returns a decision for every expense with its state, canonical category, usable-history count, amount-scale bounds (rounded to centavos), historical median (`usual_spending`), severity (rounded to four decimal places; `0` for `NORMAL`), and reason. Bounds, median, and severity are `null` for both insufficient states. Non-expense transactions are skipped, and amounts must be positive. Its rule-set identifier, `personal-transaction-iqr-v2.4.0`, is recorded by the evaluator rather than returned per decision. Its request schema requires unique, non-empty `transaction_id` values and canonical lowercase category identifiers (`[a-z][a-z0-9_]*`).
 
 ---
 

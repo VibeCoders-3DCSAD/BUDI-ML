@@ -159,7 +159,7 @@ python -m training.scripts.pipeline.survey_pipeline_v3 \
 V3 monthly targets are synthetic allocations, not observed household histories. Its
 evaluation cannot release or replace the served forecaster without external validation and
 an explicit artifact-release decision. See
-`training/docs/data-collection/survey-only-forecast-v3.md` and `docs/services/forecast/v3/methodology.md`.
+`training/docs/data-collection/survey-only-forecast-v3.md` and `docs/services/forecast/v1/methodology.md`.
 
 ## Tech Stack
 

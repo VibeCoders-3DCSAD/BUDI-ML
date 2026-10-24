@@ -10,8 +10,8 @@ from app.schemas.common import ApiMetadata, ModuleStatus, Transaction
 
 class ForecastRequest(BaseModel):
     user_id: str
-    historical_transactions: list[Transaction] = Field(min_length=1)
-    categories: list[str] = Field(min_length=1)
+    historical_transactions: list[Transaction] = Field(min_length=1, max_length=10_000)
+    categories: list[str] = Field(min_length=1, max_length=12)
     # Month to forecast (YYYY-MM); defaults to the next calendar month.
     target_month: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
 
@@ -25,6 +25,10 @@ class ForecastPoint(BaseModel):
     hfce_multiplier: float
     hfce_forecast_amount_million_php: float
     explanation: str
+    # same_quarter_last_year (12+ months), median_monthly (6-11 months), or recency_weighted_provisional (<6 months).
+    baseline_method: str
+    # True when the history is too short to show this user's seasonal pattern.
+    seasonal_uncertainty: bool
 
 
 class ForecastQuality(StrEnum):

@@ -4,7 +4,7 @@ Oct 16, 2026 · Charles Nathaniel Togle
 
 ## Overview
 
-We evaluate the recommender with four metrics: one checks that plans are valid, one checks how well Essentials are funded, and two check efficiency and priority order. Each is computed per household plan and summarized across the FIES 2023 simulation, overall and by income shock and rule setting.
+We evaluate the recommender with four metrics: one checks that plans are valid, one checks how well Essentials are funded, and two check efficiency and priority order. Each is computed per household plan and summarized across the FIES 2025 simulation, overall and by income shock and rule setting.
 
 Notation used in every formula:
 
@@ -12,10 +12,10 @@ Notation used in every formula:
 | --- | --- |
 | $B$ | Available funds of the household for the month |
 | $x_i$ | Amount the LP allocates to category $i$ |
-| $T_i$ | Target for category $i$ from the SARIMA forecast |
+| $T_i$ | Target for category $i$: the household's realised 2025 spending, a perfect-forecast target, so the LP is tested independently of forecast error |
 | $m_i$ | Minimum (floor) for category $i$; 0 if FLEXIBLE |
 | $M_i$ | Maximum (ceiling) for category $i$ |
-| $E$ | The 8 Essential categories |
+| $E$ | The Essential categories (8 HFCE purposes; housing is split into rent and utilities) |
 | $N$ | The 4 Non-Essential categories |
 
 Rates can also be reported survey-weighted: replace each count with the sum of the households' FIES weights.
@@ -61,9 +61,9 @@ $$
 
 where:
 
-- $E$ = the 8 Essential categories
+- $E$ = the Essential categories
 - $x_i$ = amount allocated to Essential category $i$
-- $T_i$ = SARIMA target for Essential category $i$
+- $T_i$ = target for Essential category $i$
 - $\min(x_i, T_i)$ = the funded part of the target, so anything above the target is not counted
 
 For per-category reporting, use the attainment ratio $c_i = \min(x_i, T_i) / T_i$ for each Essential.
@@ -91,7 +91,7 @@ where:
 
 - $U$ = idle funds: money left over while some category is still below its target
 - $B$ = available funds of the household
-- $x_i$ = amount allocated to category $i$ (all 12 categories)
+- $x_i$ = amount allocated to category $i$ (all categories)
 - $T_i$ = target for category $i$
 
 It should be 0% for every feasible plan; anything above 0 means the LP stopped short.
@@ -126,15 +126,10 @@ An Essential held back by its own ceiling ($x_i = M_i$) is not a violation, sinc
 
 ## References
 
-Alem, D., Caunhye, A. M., & Moreno, A. (2022). Revisiting Gini for equitable humanitarian logistics. *Socio-Economic Planning Sciences, 82*, Article 101312. https://arxiv.org/abs/2106.12686
+Alem, D., Caunhye, A. M., & Moreno, A. (2022). Revisiting Gini for equitable humanitarian logistics. *Socio-Economic Planning Sciences, 82*(Part B), Article 101312. https://doi.org/10.1016/j.seps.2022.101312
 
-Banerjee, S., Eichhorn, M., & Kempe, D. (2023). *Allocating with priorities and quotas: Algorithms, complexity, and dynamics* (arXiv:2204.13019) [Preprint]. arXiv. https://arxiv.org/abs/2204.13019
-
+Banerjee, S., Eichhorn, M., & Kempe, D. (2023). Allocating with priorities and quotas: Algorithms, complexity, and dynamics. In *Proceedings of the 24th ACM Conference on Economics and Computation (EC '23)*. Association for Computing Machinery. https://doi.org/10.1145/3580507.3597733
 
 Machfud, E. F. K., & Martianto, D. (2023). Optimalisasi konsumsi pangan pada rumah tangga berpendapatan rendah di DKI Jakarta [Optimization of food consumption among low income households in DKI Jakarta]. *Jurnal Ilmu Gizi dan Dietetik, 2*(1), 37–44. https://doi.org/10.25182/jigd.2023.2.1.37-44
 
-Mostajabdaveh, M., Salman, F. S., & Gutjahr, W. J. (2025). *A branch-and-price algorithm for fast and equitable last-mile relief aid distribution* (arXiv:2512.19882) [Preprint]. arXiv. https://arxiv.org/abs/2512.19882
-
-
-
-> Before submission, look for published versions of the two arXiv preprints.
+Mostajabdaveh, M., Salman, F. S., & Gutjahr, W. J. (2025). A branch-and-price algorithm for fast and equitable last-mile relief aid distribution. *European Journal of Operational Research, 324*(2). https://doi.org/10.1016/j.ejor.2025.01.032

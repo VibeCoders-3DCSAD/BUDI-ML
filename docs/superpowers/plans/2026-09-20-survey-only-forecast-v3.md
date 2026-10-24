@@ -105,7 +105,7 @@ Create sub-issues from this plan when ready.
 
 ### 9. Regenerate, Audit, and Document the v3 Release Candidate
 
-- Create `training/docs/data-collection/survey-only-forecast-v3-runbook.md`, `docs/services/forecast/v3/methodology.md`, and `tests/test_survey_v3_isolation.py`; update `README.md` and `INDEX.md` with additive v3 links only after the pipeline passes verification.
+- Create `training/docs/data-collection/survey-only-forecast-v3-runbook.md`, `docs/services/forecast/v1/methodology.md`, and `tests/test_survey_v3_isolation.py`; update `README.md` and `INDEX.md` with additive v3 links only after the pipeline passes verification.
 - Regenerate ignored `survey_v3/`, `training/datasets/processed_v3/`, and `training/datasets/forecaster_v3/`; write a v3 provenance report that distinguishes observed FIES, observed PSA HFCE, and synthetic monthly or transaction fields.
 - The isolation test must prove all v1/v2 tracked source, config, artifact, and documentation paths remain unmodified, and the model note must state that model serving remains unchanged until a separate artifact-release approval.
 

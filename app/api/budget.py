@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 
@@ -18,6 +19,7 @@ from app.schemas.common import ApiMetadata, ModuleStatus
 from app.services import budget_service
 
 router = APIRouter(prefix="/api/v1/budget", tags=["budget"])
+logger = logging.getLogger(__name__)
 
 
 def _run(request: BudgetRequest, registry: ModelRegistry) -> BudgetResponse:
@@ -25,6 +27,12 @@ def _run(request: BudgetRequest, registry: ModelRegistry) -> BudgetResponse:
     try:
         recommendation, explanations = budget_service.optimize(request)
     except ValueError as exc:
+        logger.warning(
+            "Budget optimization rejected request request_id=%s user_id=%s reason=%s",
+            request.request_id,
+            request.user_id,
+            exc,
+        )
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     model_version = registry.budget.model_id if registry.budget is not None else "n/a"

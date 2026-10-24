@@ -3,13 +3,13 @@
 ```json
 {
   "document-type": "model-evaluation",
-  "version": "1.1.0",
-  "date": "2026.09.20",
+  "version": "1.1.1",
+  "date": "2026.10.18",
   "authors": ["Group 4, III-DCSAD"]
 }
 ```
 
-> **What this is:** Companion to [`forecast/v1/overview.md`](../v1/overview.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the retired v2 SARIMA artifact actually is. The served `/api/v1/forecast/predict` endpoint now uses the HFCE quarterly forecaster described in that overview.
+> **What this is:** Companion to [`forecast/v3/overview.md`](../v3/overview.md) for the Synthetic Generation v2 corpus. It records the 2026-09-17 walk-forward run, what is empirically backed in the training data, and what the retired v2 SARIMA artifact actually is. The served `/api/v1/forecast/predict` endpoint now uses the HFCE quarterly forecaster described in that overview.
 
 ---
 
@@ -39,13 +39,13 @@ It does **not** claim that the HFCE methodology beat v1 in a controlled bake-off
 | Winner MAPE | 9.40% (label `tier3_sarima`, fit was plain ARIMA) | 6.12% (label `tier3_sarima`, fit is SARIMA) |
 | MAPE reduction vs naive | 74.9% | 83.2% |
 
-The serving explanation, feature list, and inference path in [`forecast/v1/overview.md`](../v1/overview.md) still apply. Only the training corpus, fold file, and committed artifact directory differ.
+This v2 artifact is not used by `/api/v1/forecast/predict`. The service still loads `models/forecaster_v2/` at startup, but only to report it in the health check; forecasts come from the HFCE quarterly artifacts described in [`forecast/v3/overview.md`](../v3/overview.md).
 
 ---
 
 ## Empirical backing
 
-The data methodology is **FIES-anchored, HFCE-calibrated temporal disaggregation with proportional benchmarking**. Full derivation: [`training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`](../../../../training/docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md). Operator path: [`training/docs/data-collection/synthetic-generation-v2.md`](../../../../training/docs/data-collection/synthetic-generation-v2.md).
+The data methodology is **FIES-anchored, HFCE-calibrated temporal disaggregation with proportional benchmarking**. Full derivation: [`docs/data-collection/fies-hfce-synthetic-data-generation-methodology.md`](../../../data-collection/fies-hfce-synthetic-data-generation-methodology.md). Operator path: [`docs/data-collection/synthetic-generation-v2.md`](../../../data-collection/synthetic-generation-v2.md).
 
 ### Observed
 
